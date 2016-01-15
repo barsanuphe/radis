@@ -42,7 +42,7 @@ func (g *Genre) HasArtist(artist string) bool {
 //----------------
 
 // TODO check if we need other unicode classes
-var reAlbum = regexp.MustCompile(`^([\p{L}\d_ ]+) \(([0-9]+)\) ([\p{L}\d_ ]+)$`)
+var reAlbum = regexp.MustCompile(`^([\p{L}\d_ ]+) \(([0-9]+)\) ([\p{L}\d_ ]+)(\s\[MP3\])?$`)
 
 type AlbumFolder struct {
 	Root   string
@@ -54,7 +54,11 @@ type AlbumFolder struct {
 }
 
 func (a *AlbumFolder) String() string {
-	return a.Artist + " (" + a.Year + ") " + a.Title
+	if a.IsMP3 {
+		return a.Artist + " (" + a.Year + ") " + a.Title + " [MP3]"
+	} else {
+		return a.Artist + " (" + a.Year + ") " + a.Title
+	}
 }
 
 func (a *AlbumFolder) IsAlbum() bool {
@@ -72,6 +76,7 @@ func (a *AlbumFolder) ExtractInfo() (err error) {
 		a.Artist = matches[1]
 		a.Year = matches[2]
 		a.Title = matches[3]
+		a.IsMP3 = matches[4] != ""
 	} else {
 		err = errors.New("Not an album!")
 	}
@@ -87,9 +92,6 @@ func (a *AlbumFolder) MoveToNewPath(genre string) (err error) {
 	}
 
 	directoryName := filepath.Base(a.Path)
-	if a.IsMP3 {
-		directoryName += " [MP3]"
-	}
 	newPath := filepath.Join(a.Root, genre, a.Artist, directoryName)
 	// comparer avec l'ancien
 	if newPath != a.Path {
@@ -161,9 +163,10 @@ func sortFolders(root string, config []Genre) (err error) {
 			return
 		}
 
-		relative, _ := filepath.Rel(root, path)
+
 		if fileInfo.IsDir() {
-			fmt.Println("Scanning ", relative)
+			// relative, _ := filepath.Rel(root, path)
+			// fmt.Println("Scanning ", relative)
 			af := AlbumFolder{Root: root, Path: path}
 			if af.IsAlbum() {
 				fmt.Println("+ Found album: ", af.String())
@@ -180,7 +183,7 @@ func sortFolders(root string, config []Genre) (err error) {
 					err = af.MoveToNewPath("UNCATEGORIZED")
 				}
 			} else {
-				fmt.Println("++ Skipping, not an album.")
+				// fmt.Println("++ Skipping, not an album.")
 			}
 
 		}
