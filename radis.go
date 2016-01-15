@@ -1,13 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -33,7 +33,7 @@ func (g *Genre) HasArtist(artist string) bool {
 	sort.Strings(g.Folders)
 	i := sort.SearchStrings(g.Folders, artist)
 	if i < len(g.Folders) && g.Folders[i] == artist {
-		fmt.Println("Found artist ", artist, "in genre ", g.Name)
+		// fmt.Println("++ Found artist ", artist, "in genre ", g.Name)
 		return true
 	}
 	return false
@@ -41,20 +41,26 @@ func (g *Genre) HasArtist(artist string) bool {
 
 //----------------
 
+// TODO check if we need other unicode classes
 var reAlbum = regexp.MustCompile(`^([\p{L}\d_ ]+) \(([0-9]+)\) ([\p{L}\d_ ]+)$`)
 
 type AlbumFolder struct {
 	Root   string
 	Path   string
 	Artist string
-	Year   int
+	Year   string
 	Title  string
 	IsMP3  bool
+}
+
+func (a *AlbumFolder) String() string {
+	return a.Artist + " (" + a.Year + ") " + a.Title
 }
 
 func (a *AlbumFolder) IsAlbum() bool {
 	// TODO isDIR
 	if err := a.ExtractInfo(); err != nil {
+		// fmt.Println(err)
 		return false
 	}
 	return true
@@ -62,36 +68,51 @@ func (a *AlbumFolder) IsAlbum() bool {
 
 func (a *AlbumFolder) ExtractInfo() (err error) {
 	matches := reAlbum.FindStringSubmatch(filepath.Base(a.Path))
-	fmt.Println(matches)
 	if len(matches) > 0 {
 		a.Artist = matches[1]
-		a.Year, _ = strconv.Atoi(matches[2])
+		a.Year = matches[2]
 		a.Title = matches[3]
+	} else {
+		err = errors.New("Not an album!")
 	}
-
 	// TODO: IsMP3!!!!
 	return
 }
 
 func (a *AlbumFolder) MoveToNewPath(genre string) (err error) {
+	// TODO: return bool hasMoved
+
 	if !a.IsAlbum() {
-		fmt.Println("ERRRRRR")
-		// TODO return ERR
+		return errors.New("Cannot move, not an album.")
 	}
 
-	directoryName, err := filepath.Rel(a.Root, a.Path)
-	if err != nil {
-		panic(err)
-	}
+	directoryName := filepath.Base(a.Path)
 	if a.IsMP3 {
 		directoryName += " [MP3]"
 	}
 	newPath := filepath.Join(a.Root, genre, a.Artist, directoryName)
 	// comparer avec l'ancien
 	if newPath != a.Path {
-		fmt.Println(a.Path, " -> ", newPath)
 		// if different, move folder
-		os.Rename(a.Path, newPath)
+		originalRelative, _ := filepath.Rel(a.Root, a.Path)
+		destRelative, _ := filepath.Rel(a.Root, newPath)
+		fmt.Println("+ "+originalRelative, " -> ", destRelative)
+
+		// TODO create newPath parent if it does not exist
+		newPathParent := filepath.Dir(newPath)
+		if _, err = os.Stat(newPathParent); os.IsNotExist(err) {
+			// newPathParent does not exist, creating
+			err = os.MkdirAll(newPathParent, 0777)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		// move
+		err = os.Rename(a.Path, newPath)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return
 }
@@ -133,30 +154,35 @@ func timeTrack(start time.Time, name string) {
 func sortFolders(root string, config []Genre) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, _ error) (err error) {
+	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
+		// when an album has just been moved, Walk goes through it a second
+		// time with an "file does not exist" error
+		if os.IsNotExist(walkError) {
+			return
+		}
+
 		relative, _ := filepath.Rel(root, path)
-		fmt.Println("Scanning ", relative)
-
 		if fileInfo.IsDir() {
-			fmt.Println("-> is dir!")
-
+			fmt.Println("Scanning ", relative)
 			af := AlbumFolder{Root: root, Path: path}
 			if af.IsAlbum() {
+				fmt.Println("+ Found album: ", af.String())
 				found := false
 				for _, genre := range config {
 					// if artist is known, it belongs to genre.Name
 					if genre.HasArtist(af.Artist) {
 						err = af.MoveToNewPath(genre.Name)
 						found = true
+						break
 					}
 				}
 				if !found {
 					err = af.MoveToNewPath("UNCATEGORIZED")
 				}
+			} else {
+				fmt.Println("++ Skipping, not an album.")
 			}
 
-		} else {
-			fmt.Println("Skipping ", relative)
 		}
 		return
 	})
