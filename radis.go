@@ -53,12 +53,12 @@ type AlbumFolder struct {
 	IsMP3  bool
 }
 
-func (a *AlbumFolder) String() string {
+func (a *AlbumFolder) String() (albumName string) {
+	albumName = a.Artist + " (" + a.Year + ") " + a.Title
 	if a.IsMP3 {
-		return a.Artist + " (" + a.Year + ") " + a.Title + " [MP3]"
-	} else {
-		return a.Artist + " (" + a.Year + ") " + a.Title
+		albumName += " [MP3]"
 	}
+	return
 }
 
 func (a *AlbumFolder) IsAlbum() bool {
@@ -80,15 +80,14 @@ func (a *AlbumFolder) ExtractInfo() (err error) {
 	} else {
 		err = errors.New("Not an album!")
 	}
-	// TODO: IsMP3!!!!
 	return
 }
 
-func (a *AlbumFolder) MoveToNewPath(genre string) (err error) {
-	// TODO: return bool hasMoved
+func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
+	hasMoved = false
 
 	if !a.IsAlbum() {
-		return errors.New("Cannot move, not an album.")
+		return false, errors.New("Cannot move, not an album.")
 	}
 
 	directoryName := filepath.Base(a.Path)
@@ -112,8 +111,8 @@ func (a *AlbumFolder) MoveToNewPath(genre string) (err error) {
 
 		// move
 		err = os.Rename(a.Path, newPath)
-		if err != nil {
-			fmt.Println(err)
+		if err == nil {
+			hasMoved = true
 		}
 	}
 	return
@@ -156,6 +155,8 @@ func timeTrack(start time.Time, name string) {
 func sortFolders(root string, config []Genre) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
+	fmt.Println("Scanning for albums.")
+	movedAlbums := 0
 	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -163,24 +164,28 @@ func sortFolders(root string, config []Genre) (err error) {
 			return
 		}
 
-
 		if fileInfo.IsDir() {
+
 			// relative, _ := filepath.Rel(root, path)
 			// fmt.Println("Scanning ", relative)
 			af := AlbumFolder{Root: root, Path: path}
 			if af.IsAlbum() {
+				hasMoved := false
 				fmt.Println("+ Found album: ", af.String())
 				found := false
 				for _, genre := range config {
 					// if artist is known, it belongs to genre.Name
 					if genre.HasArtist(af.Artist) {
-						err = af.MoveToNewPath(genre.Name)
+						hasMoved, err = af.MoveToNewPath(genre.Name)
 						found = true
 						break
 					}
 				}
 				if !found {
-					err = af.MoveToNewPath("UNCATEGORIZED")
+					hasMoved, err = af.MoveToNewPath("UNCATEGORIZED")
+				}
+				if hasMoved {
+					movedAlbums ++
 				}
 			} else {
 				// fmt.Println("++ Skipping, not an album.")
@@ -192,7 +197,7 @@ func sortFolders(root string, config []Genre) (err error) {
 	if err != nil {
 		fmt.Printf("Error!")
 	}
-	fmt.Printf("\rScanning: Done.\n")
+	fmt.Printf("Moved %d albums.\n", movedAlbums)
 	return
 }
 
