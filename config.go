@@ -8,9 +8,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Config []Genre
+type AllGenres []Genre
 
-func (a *Config) String() (text string) {
+func (a *AllGenres) String() (text string) {
 	text = "All Genres: \n"
 	for _, genre := range *a {
 		text += "\t" + genre.String()
@@ -18,19 +18,19 @@ func (a *Config) String() (text string) {
 	return
 }
 
-func (a Config) Len() int {
+func (a AllGenres) Len() int {
 	return len(a)
 }
 
-func (a Config) Less(i, j int) bool {
+func (a AllGenres) Less(i, j int) bool {
 	return strings.ToLower(a[i].Name) < strings.ToLower(a[j].Name)
 }
 
-func (a Config) Swap(i, j int) {
+func (a AllGenres) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-func (a *Config) Load(path string) (err error) {
+func (a *AllGenres) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -51,7 +51,7 @@ func (a *Config) Load(path string) (err error) {
 	return
 }
 
-func (a *Config) Write(path string) (err error) {
+func (a *AllGenres) Write(path string) (err error) {
 	sort.Sort(*a)
 	m := make(map[string][]string)
 	for _, genre := range *a {

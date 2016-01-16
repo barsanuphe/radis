@@ -1,25 +1,28 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/codegangsta/cli"
 	"launchpad.net/go-xdg"
 )
+
+// CONFIG ----------------------------------------------------------------------
 
 const (
 	radis                  = "radis"
 	radisGenresConfigFile  = radis + "_genres.yaml"
 	radisAliasesConfigFile = radis + "_aliases.yaml"
+	xdgGenrePath           = radis + "/" + radisGenresConfigFile
+	xdgAliasPath           = radis + "/" + radisAliasesConfigFile
 )
 
 func getConfigPaths() (genresConfigFile string, aliasesConfigFile string, err error) {
-	xdgGenrePath := radis + "/" + radisGenresConfigFile
-	xdgAliasPath := radis + "/" + radisAliasesConfigFile
-
 	genresConfigFile, err = xdg.Config.Find(xdgGenrePath)
 	if err != nil {
 		genresConfigFile, err = xdg.Config.Ensure(xdgGenrePath)
@@ -40,15 +43,71 @@ func getConfigPaths() (genresConfigFile string, aliasesConfigFile string, err er
 	return
 }
 
+func LoadConfig() (aliases MainAlias, genres AllGenres, err error) {
+	// find configuration files
+	genresConfigFile, aliasesConfigFile, err := getConfigPaths()
+	if err != nil {
+		return
+	}
+	// load config files
+	aliases = MainAlias{}
+	if err = aliases.Load(aliasesConfigFile); err != nil {
+		return
+	}
+	genres = AllGenres{}
+	if err = genres.Load(genresConfigFile); err != nil {
+		return
+	}
+	return
+}
+
+func WriteConfig(aliases MainAlias, genres AllGenres) (err error) {
+	// find configuration files
+	genresConfigFile, aliasesConfigFile, err := getConfigPaths()
+	if err != nil {
+		return
+	}
+	// write ordered config files
+	if err = aliases.Write(aliasesConfigFile); err != nil {
+		return
+	}
+	if err = genres.Write(genresConfigFile); err != nil {
+		return
+	}
+	return
+}
+
+// HELPERS ---------------------------------------------------------------------
+
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	fmt.Printf("-- [%s done in %s]\n", name, elapsed)
 }
 
-func sortFolders(root string, genres []Genre, aliases MainAlias) (err error) {
+func GetExistingPath(path string) (existingPath string, err error) {
+	// check root exists or pwd+root exists
+	if filepath.IsAbs(path) {
+		existingPath = path
+	} else {
+		pwd, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+		existingPath = filepath.Join(pwd, path)
+	}
+	// check root exists
+	if _, err = os.Stat(existingPath); os.IsNotExist(err) {
+		err = errors.New("Directory " + path + " does not exist!!!")
+	}
+	return
+}
+
+// SORT ------------------------------------------------------------------------
+
+func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	fmt.Println("Scanning for albums.")
+	fmt.Println("Scanning for albums in " + root + ".")
 	movedAlbums := 0
 	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
@@ -58,8 +117,6 @@ func sortFolders(root string, genres []Genre, aliases MainAlias) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-			// relative, _ := filepath.Rel(root, path)
-			// fmt.Println("Scanning ", relative)
 			af := AlbumFolder{Root: root, Path: path}
 			if af.IsAlbum() {
 				hasMoved := false
@@ -88,10 +145,7 @@ func sortFolders(root string, genres []Genre, aliases MainAlias) (err error) {
 				if hasMoved {
 					movedAlbums++
 				}
-			} else {
-				// fmt.Println("++ Skipping, not an album.")
 			}
-
 		}
 		return
 	})
@@ -101,6 +155,8 @@ func sortFolders(root string, genres []Genre, aliases MainAlias) (err error) {
 	fmt.Printf("Moved %d albums.\n", movedAlbums)
 	return
 }
+
+// CLEAN -----------------------------------------------------------------------
 
 func IsEmpty(name string) (bool, error) {
 	f, err := os.Open(name)
@@ -158,48 +214,60 @@ func deleteEmptyFolders(root string) (err error) {
 	return
 }
 
-//----------------
+// MAIN ------------------------------------------------------------------------
 
 func main() {
 	fmt.Println("\n\tR A D I S\n\t---------\n")
 
-	// loac config
-	genresConfigFile, aliasesConfigFile, err := getConfigPaths()
+	// load config
+	aliases, genres, err := LoadConfig()
 	if err != nil {
 		panic(err)
 	}
 
-	// load config files
-	aliases := MainAlias{}
-	if err := aliases.Load(aliasesConfigFile); err != nil {
-		panic(err)
-	}
-	genres := Config{}
-	if err := genres.Load(genresConfigFile); err != nil {
-		panic(err)
+	// cli: commands show / sync folder
+	app := cli.NewApp()
+	app.Name = "R A D I S"
+	app.Usage = "Organize your music collection."
+
+	app.Commands = []cli.Command{
+		{
+			Name:    "show",
+			Aliases: []string{"ls"},
+			Usage:   "show configuration",
+			Action: func(c *cli.Context) {
+				// print config
+				fmt.Println(aliases.String())
+				fmt.Println(genres.String())
+			},
+		},
+		{
+			Name:    "sync",
+			Aliases: []string{"s"},
+			Usage:   "sync folder according to configuration",
+			Action: func(c *cli.Context) {
+				// scan folder in root
+				root, err := GetExistingPath(c.Args().First())
+				if err != nil {
+					panic(err)
+				}
+
+				// sort albums
+				if err := sortAlbums(root, aliases, genres); err != nil {
+					panic(err)
+				}
+				// scan again to remove empty directories
+				if err := deleteEmptyFolders(root); err != nil {
+					panic(err)
+				}
+			},
+		},
 	}
 
-	// print config
-	//fmt.Println(aliases.String())
-	//fmt.Println(genres.String())
-
-	// scan folder in root
-	pwd, _ := os.Getwd()
-	root := filepath.Join(pwd, "test/")
-	if err := sortFolders(root, genres, aliases); err != nil {
-		panic(err)
-	}
-
-	// scan again to remove empty directories
-	if err := deleteEmptyFolders(root); err != nil {
-		panic(err)
-	}
+	app.Run(os.Args)
 
 	// write ordered config files
-	if err := aliases.Write(aliasesConfigFile); err != nil {
-		panic(err)
-	}
-	if err := genres.Write(genresConfigFile); err != nil {
+	if err := WriteConfig(aliases, genres); err != nil {
 		panic(err)
 	}
 }

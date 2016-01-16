@@ -69,7 +69,7 @@ func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
 		// if different, move folder
 		originalRelative, _ := filepath.Rel(a.Root, a.Path)
 		destRelative, _ := filepath.Rel(a.Root, newPath)
-		fmt.Println("+ "+originalRelative, " -> ", destRelative)
+		fmt.Println("- "+originalRelative, " -> ", destRelative)
 
 		newPathParent := filepath.Dir(newPath)
 		if _, err = os.Stat(newPathParent); os.IsNotExist(err) {
