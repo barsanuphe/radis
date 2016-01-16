@@ -109,6 +109,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 
 	fmt.Println("Scanning for albums in " + root + ".")
 	movedAlbums := 0
+	uncategorized := 0
 	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -140,6 +141,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 					}
 				}
 				if !found {
+					uncategorized++
 					hasMoved, err = af.MoveToNewPath("UNCATEGORIZED")
 				}
 				if hasMoved {
@@ -153,6 +155,9 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 		fmt.Printf("Error!")
 	}
 	fmt.Printf("Moved %d albums.\n", movedAlbums)
+	if uncategorized != 0 {
+		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
+	}
 	return
 }
 
