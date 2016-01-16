@@ -1,6 +1,9 @@
 package main
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 type Genre struct {
 	Name    string
@@ -23,4 +26,28 @@ func (g *Genre) HasArtist(artist string) bool {
 		return true
 	}
 	return false
+}
+
+//--------------------------
+
+type AllGenres []Genre
+
+func (a *AllGenres) String() (text string) {
+	text = "All Genres: \n"
+	for _, genre := range *a {
+		text += genre.String()
+	}
+	return
+}
+
+func (a AllGenres) Len() int {
+	return len(a)
+}
+
+func (a AllGenres) Less(i, j int) bool {
+	return strings.ToLower(a[i].Name) < strings.ToLower(a[j].Name)
+}
+
+func (a AllGenres) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
 }

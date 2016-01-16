@@ -5,20 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
-// TODO : save config with sorted Folders
-
-func printConfig(config []Genre) {
-	for _, genre := range config {
-		fmt.Println(genre.String())
-	}
-}
-
-func readConfig(path string) (Config []Genre, err error) {
+func readConfig(path string) (genres AllGenres, err error) {
 	data, err := ioutil.ReadFile("radis.yaml")
 	if err != nil {
 		panic(err)
@@ -34,7 +27,27 @@ func readConfig(path string) (Config []Genre, err error) {
 		var newGenre Genre
 		newGenre.Name = genre
 		newGenre.Folders = m[genre]
-		Config = append(Config, newGenre)
+		genres = append(genres, newGenre)
+	}
+	return
+}
+
+func writeConfig(config AllGenres, path string) (err error) {
+	sort.Sort(config)
+	m := make(map[string][]string)
+	for _, genre := range config {
+		sort.Strings(genre.Folders)
+		m[genre.Name] = genre.Folders
+	}
+
+	d, err := yaml.Marshal(&m)
+	if err != nil {
+		fmt.Println("error: %v", err)
+		panic(err)
+	}
+	err = ioutil.WriteFile(path, d, 0777)
+	if err != nil {
+		fmt.Println("error: %v", err)
 	}
 	return
 }
@@ -104,7 +117,7 @@ func main() {
 		panic(err)
 	}
 
-	printConfig(config)
+	fmt.Println(config.String())
 
 	// scan folder in root
 	root := filepath.Join(pwd, "test/")
@@ -112,4 +125,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = writeConfig(config, filepath.Join(pwd, "radis_out.yaml"))
+	if err != nil {
+		panic(err)
+	}
 }
+
