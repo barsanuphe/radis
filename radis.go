@@ -2,55 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sort"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
-
-func readConfig(path string) (genres AllGenres, err error) {
-	data, err := ioutil.ReadFile("radis.yaml")
-	if err != nil {
-		panic(err)
-	}
-
-	m := make(map[string][]string)
-	err = yaml.Unmarshal(data, &m)
-	if err != nil {
-		panic(err)
-	}
-
-	for genre := range m {
-		var newGenre Genre
-		newGenre.Name = genre
-		newGenre.Folders = m[genre]
-		genres = append(genres, newGenre)
-	}
-	return
-}
-
-func writeConfig(config AllGenres, path string) (err error) {
-	sort.Sort(config)
-	m := make(map[string][]string)
-	for _, genre := range config {
-		sort.Strings(genre.Folders)
-		m[genre.Name] = genre.Folders
-	}
-
-	d, err := yaml.Marshal(&m)
-	if err != nil {
-		fmt.Println("error: %v", err)
-		panic(err)
-	}
-	err = ioutil.WriteFile(path, d, 0777)
-	if err != nil {
-		fmt.Println("error: %v", err)
-	}
-	return
-}
 
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
@@ -112,23 +67,19 @@ func main() {
 	fmt.Println("R A D I S\n---------\n")
 	pwd, _ := os.Getwd()
 
-	config, err := readConfig(filepath.Join(pwd, "radis.yaml"))
-	if err != nil {
+	config := AllGenres{}
+	if err := config.Load(filepath.Join(pwd, "radis.yaml")); err != nil {
 		panic(err)
 	}
-
 	fmt.Println(config.String())
 
 	// scan folder in root
 	root := filepath.Join(pwd, "test/")
-	err = sortFolders(root, config)
-	if err != nil {
+	if err := sortFolders(root, config); err != nil {
 		panic(err)
 	}
 
-	err = writeConfig(config, filepath.Join(pwd, "radis_out.yaml"))
-	if err != nil {
+	if err := config.Write(filepath.Join(pwd, "radis_out.yaml")); err != nil {
 		panic(err)
 	}
 }
-
