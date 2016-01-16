@@ -45,7 +45,7 @@ func (a *AllGenres) Load(path string) (err error) {
 	for genre := range m {
 		var newGenre Genre
 		newGenre.Name = genre
-		newGenre.Folders = m[genre]
+		newGenre.Artists = m[genre]
 		*a = append(*a, newGenre)
 	}
 	return
@@ -55,8 +55,8 @@ func (a *AllGenres) Write(path string) (err error) {
 	sort.Sort(*a)
 	m := make(map[string][]string)
 	for _, genre := range *a {
-		sort.Strings(genre.Folders)
-		m[genre.Name] = genre.Folders
+		sort.Strings(genre.Artists)
+		m[genre.Name] = genre.Artists
 	}
 
 	d, err := yaml.Marshal(&m)
