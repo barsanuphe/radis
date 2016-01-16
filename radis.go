@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -69,6 +70,62 @@ func sortFolders(root string, genres []Genre, aliases MainAlias) (err error) {
 	return
 }
 
+func IsEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
+}
+
+func deleteEmptyFolders(root string) (err error) {
+	defer timeTrack(time.Now(), "Scanning files")
+
+	fmt.Println("Scanning for empty directories.")
+	deletedDirectories := 0
+	deletedDirectoriesThisTime := 0
+	atLeastOnce := false
+
+	// loops until all levels of empty directories are deleted
+	for !atLeastOnce || deletedDirectoriesThisTime != 0 {
+		atLeastOnce = true
+		deletedDirectoriesThisTime = 0
+		err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
+			// when an album has just been removed, Walk goes through it a second
+			// time with an "file does not exist" error
+			if os.IsNotExist(walkError) {
+				return
+			}
+			if fileInfo.IsDir() {
+				isEmpty, err := IsEmpty(path)
+				if err != nil {
+					panic(err)
+				}
+				if isEmpty {
+					fmt.Println("Removing empty directory ", path)
+					if err := os.Remove(path); err == nil {
+						deletedDirectories++
+						deletedDirectoriesThisTime++
+					}
+				}
+			}
+			return
+		})
+		if err != nil {
+			fmt.Printf("Error!")
+		}
+	}
+
+	fmt.Printf("Removed %d albums.\n", deletedDirectories)
+	return
+}
+
 //----------------
 
 func main() {
@@ -96,7 +153,11 @@ func main() {
 	if err := sortFolders(root, genres, aliases); err != nil {
 		panic(err)
 	}
-	// TODO scan again to remove empty directories
+
+	// scan again to remove empty directories
+	if err := deleteEmptyFolders(root); err != nil {
+		panic(err)
+	}
 
 	// write ordered config files
 	if err := aliases.Write(aliasesConfigFile); err != nil {
