@@ -21,7 +21,6 @@ It does two things:
 am not satisfied with the results, as the genres seem to be too generic or much
 too specific to me.
 
-
 It moves files around, deletes empty directories: **You may lose data.**
 Act as if you could lose everything and prepare accordingly.
 
@@ -53,21 +52,31 @@ You might want to `ln -s` your actual configuration files there.
 
 ### Usage
 
-    $ radis FOLDER
+This command lists what was found in the configuration files:
 
-`FOLDER` should be the absolute path to your music collection.
-Make sure this is the right one.
-It will delete empty directories in that `FOLDER`.
+    $ radis show
 
-**radis**  only works if you have this setup:
+This reorganizes your music collection in `FOLDER`:
+
+    $ radis sync FOLDER
+
+Make sure `FOLDER` is correct.
+**radis** will stop if the path does not exist, but otherwise it will at least
+delete empty directories in that `FOLDER`.
+
+**radis** only works if you have this setup:
 
     root/
-       |- Genre/
-          |-  Artist/
-               |- Artist (year) Album
+    |- Genre/
+       |- Artist/
+          |- Artist (year) Album
 
 What if you have something different?
 Then you should not use **radis**.
+
+When in doubt:
+
+    $ radis help
 
 ### Configuration
 
