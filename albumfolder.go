@@ -8,8 +8,7 @@ import (
 	"regexp"
 )
 
-// TODO check if we need other unicode classes
-var reAlbum = regexp.MustCompile(`^([\p{L}\d_ ]+) \(([0-9]+)\) ([\p{L}\d_ ]+)(\s\[MP3\])?$`)
+var reAlbum = regexp.MustCompile(`^([\pL\pP\pS\pN\d_ ]+) \(([0-9]+)\) ([\pL\pP\pS\pN\d_ ]+)(\s\[MP3\])?$`)
 
 type AlbumFolder struct {
 	Root      string
