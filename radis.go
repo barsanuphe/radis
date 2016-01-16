@@ -67,7 +67,7 @@ func main() {
 	fmt.Println("R A D I S\n---------\n")
 	pwd, _ := os.Getwd()
 
-	config := AllGenres{}
+	config := Config{}
 	if err := config.Load(filepath.Join(pwd, "radis.yaml")); err != nil {
 		panic(err)
 	}
