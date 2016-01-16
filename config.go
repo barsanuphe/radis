@@ -13,7 +13,7 @@ type Config []Genre
 func (a *Config) String() (text string) {
 	text = "All Genres: \n"
 	for _, genre := range *a {
-		text += genre.String()
+		text += "\t" + genre.String()
 	}
 	return
 }

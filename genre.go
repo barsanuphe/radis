@@ -10,7 +10,7 @@ type Genre struct {
 func (g *Genre) String() string {
 	txt := g.Name + ":\n"
 	for _, artist := range g.Folders {
-		txt += "\t- " + artist + "\n"
+		txt += "\t\t- " + artist + "\n"
 	}
 	return txt
 }

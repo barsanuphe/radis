@@ -12,7 +12,7 @@ func timeTrack(start time.Time, name string) {
 	fmt.Printf("-- [%s done in %s]\n", name, elapsed)
 }
 
-func sortFolders(root string, config []Genre) (err error) {
+func sortFolders(root string, genres []Genre, aliases MainAlias) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
 	fmt.Println("Scanning for albums.")
@@ -25,7 +25,6 @@ func sortFolders(root string, config []Genre) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-
 			// relative, _ := filepath.Rel(root, path)
 			// fmt.Println("Scanning ", relative)
 			af := AlbumFolder{Root: root, Path: path}
@@ -33,9 +32,18 @@ func sortFolders(root string, config []Genre) (err error) {
 				hasMoved := false
 				fmt.Println("+ Found album: ", af.String())
 				found := false
-				for _, genre := range config {
+
+				// see if artist has known alias
+				for _, alias := range aliases {
+					if alias.HasAlias(af.Artist) {
+						af.MainAlias = alias.MainAlias
+						break
+					}
+				}
+				// find which genre the artist or main alias belongs to
+				for _, genre := range genres {
 					// if artist is known, it belongs to genre.Name
-					if genre.HasArtist(af.Artist) {
+					if genre.HasArtist(af.MainAlias) {
 						hasMoved, err = af.MoveToNewPath(genre.Name)
 						found = true
 						break
@@ -64,22 +72,37 @@ func sortFolders(root string, config []Genre) (err error) {
 //----------------
 
 func main() {
-	fmt.Println("R A D I S\n---------\n")
+	fmt.Println("\n\tR A D I S\n\t---------\n")
 	pwd, _ := os.Getwd()
+	aliasesConfigFile := filepath.Join(pwd, "radis_aliases.yaml")
+	genresConfigFile := filepath.Join(pwd, "radis.yaml")
 
-	config := Config{}
-	if err := config.Load(filepath.Join(pwd, "radis.yaml")); err != nil {
+	// load config files
+	aliases := MainAlias{}
+	if err := aliases.Load(aliasesConfigFile); err != nil {
 		panic(err)
 	}
-	fmt.Println(config.String())
+	genres := Config{}
+	if err := genres.Load(genresConfigFile); err != nil {
+		panic(err)
+	}
+
+	// print config
+	//fmt.Println(aliases.String())
+	//fmt.Println(genres.String())
 
 	// scan folder in root
 	root := filepath.Join(pwd, "test/")
-	if err := sortFolders(root, config); err != nil {
+	if err := sortFolders(root, genres, aliases); err != nil {
 		panic(err)
 	}
+	// TODO scan again to remove empty directories
 
-	if err := config.Write(filepath.Join(pwd, "radis_out.yaml")); err != nil {
+	// write ordered config files
+	if err := aliases.Write(aliasesConfigFile); err != nil {
+		panic(err)
+	}
+	if err := genres.Write(genresConfigFile); err != nil {
 		panic(err)
 	}
 }
