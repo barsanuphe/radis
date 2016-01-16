@@ -6,7 +6,39 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"launchpad.net/go-xdg"
 )
+
+const (
+	radis                  = "radis"
+	radisGenresConfigFile  = radis + "_genres.yaml"
+	radisAliasesConfigFile = radis + "_aliases.yaml"
+)
+
+func getConfigPaths() (genresConfigFile string, aliasesConfigFile string, err error) {
+	xdgGenrePath := radis + "/" + radisGenresConfigFile
+	xdgAliasPath := radis + "/" + radisAliasesConfigFile
+
+	genresConfigFile, err = xdg.Config.Find(xdgGenrePath)
+	if err != nil {
+		genresConfigFile, err = xdg.Config.Ensure(xdgGenrePath)
+		if err != nil {
+			return
+		}
+		fmt.Println("Configuration file", genresConfigFile, "created. Populate it.")
+	}
+
+	aliasesConfigFile, err = xdg.Config.Find(xdgAliasPath)
+	if err != nil {
+		aliasesConfigFile, err = xdg.Config.Ensure(xdgAliasPath)
+		if err != nil {
+			return
+		}
+		fmt.Println("Configuration file", aliasesConfigFile, "created. Populate it.")
+	}
+	return
+}
 
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
@@ -130,9 +162,12 @@ func deleteEmptyFolders(root string) (err error) {
 
 func main() {
 	fmt.Println("\n\tR A D I S\n\t---------\n")
-	pwd, _ := os.Getwd()
-	aliasesConfigFile := filepath.Join(pwd, "radis_aliases.yaml")
-	genresConfigFile := filepath.Join(pwd, "radis.yaml")
+
+	// loac config
+	genresConfigFile, aliasesConfigFile, err := getConfigPaths()
+	if err != nil {
+		panic(err)
+	}
 
 	// load config files
 	aliases := MainAlias{}
@@ -149,6 +184,7 @@ func main() {
 	//fmt.Println(genres.String())
 
 	// scan folder in root
+	pwd, _ := os.Getwd()
 	root := filepath.Join(pwd, "test/")
 	if err := sortFolders(root, genres, aliases); err != nil {
 		panic(err)
