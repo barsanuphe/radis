@@ -96,6 +96,14 @@ When in doubt:
     - artist
     - another one
 
+Compilations should be in folders such as: `Various Artists (1937) Old Stuff`.
+They can be associated to a genre in the yaml file:
+
+    genre:
+    - artist
+    - Various Artists | compilation title
+
+
 **radis** reorders the files each time it runs, so that they get easier to read.
 
 ### Configuration examples
@@ -116,4 +124,6 @@ When in doubt:
     Brit-Rock:
     - Radiohead
     - Blur
+    Blues:
+    - Various Artists | Rare Chicago Blues
 

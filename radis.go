@@ -110,6 +110,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 	fmt.Println("Scanning for albums in " + root + ".")
 	movedAlbums := 0
 	uncategorized := 0
+	foundAlbums := 0
 	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -120,8 +121,9 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 		if fileInfo.IsDir() {
 			af := AlbumFolder{Root: root, Path: path}
 			if af.IsAlbum() {
+				foundAlbums++
 				hasMoved := false
-				fmt.Println("+ Found album: ", af.String())
+				// fmt.Println("+ Found album: ", af.String())
 				found := false
 
 				// see if artist has known alias
@@ -134,7 +136,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 				// find which genre the artist or main alias belongs to
 				for _, genre := range genres {
 					// if artist is known, it belongs to genre.Name
-					if genre.HasArtist(af.MainAlias) {
+					if genre.HasArtist(af.MainAlias) || genre.HasCompilation(af.Title) {
 						hasMoved, err = af.MoveToNewPath(genre.Name)
 						found = true
 						break
@@ -154,7 +156,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 	if err != nil {
 		fmt.Printf("Error!")
 	}
-	fmt.Printf("Moved %d albums.\n", movedAlbums)
+	fmt.Printf("Found %d albums, Moved %d.\n", foundAlbums, movedAlbums)
 	if uncategorized != 0 {
 		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
 	}
