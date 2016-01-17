@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"sort"
-)
+import "sort"
 
 type Genre struct {
 	Name    string
