@@ -167,6 +167,82 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 	return
 }
 
+// LIST NON FLAC ---------------------------------------------------------------
+
+func HasNonFlacFiles(directoryPath string) (bool, error) {
+	f, err := os.Open(directoryPath)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	fileList, err := f.Readdirnames(-1)
+	if err == io.EOF {
+		return true, nil
+	}
+
+	hasNonFlac := false
+	for _, file := range fileList {
+		switch filepath.Ext(file) {
+		case ".flac", ".jpg", ".jpeg", ".png":
+			// accepted extensions
+		case ".mp3", ".wma", ".m4a":
+			hasNonFlac = true
+			break
+		default:
+			fmt.Println("Found suspicious file ", file, " in ", directoryPath)
+			hasNonFlac = true
+			break
+		}
+	}
+	return hasNonFlac, err
+}
+
+func findNonFlacAlbums(root string) (err error) {
+	defer timeTrack(time.Now(), "Scanning files")
+
+	fmt.Println("Scanning for non-Flac albums in " + root + ".")
+	unFlagged := 0
+	nonFlacAlbums := 0
+	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
+		// when an album has just been moved, Walk goes through it a second
+		// time with an "file does not exist" error
+		if os.IsNotExist(walkError) {
+			return
+		}
+
+		if fileInfo.IsDir() {
+			af := AlbumFolder{Root: root, Path: path}
+			if af.IsAlbum() {
+				// scan contents for non-flac
+				isNonFlac, err := HasNonFlacFiles(path)
+				if err != nil {
+					panic(err)
+				}
+				relativePath, _ := filepath.Rel(root, path)
+				if isNonFlac {
+					fmt.Println("- ", relativePath)
+					nonFlacAlbums++
+				}
+				if isNonFlac && !af.IsMP3 {
+					unFlagged++
+					fmt.Println("!!! ", relativePath, " not flagged as non FLAC!!!")
+				}
+				// NOTE: find falsely tagged folders? is that a thing?
+			}
+		}
+		return
+	})
+	if err != nil {
+		fmt.Printf("Error!")
+	}
+	fmt.Printf("Found %d non-Flac albums, including %d incorrectly flagged.\n", nonFlacAlbums, unFlagged)
+	if unFlagged != 0 {
+		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", unFlagged)
+	}
+	return
+}
+
 // CLEAN -----------------------------------------------------------------------
 
 func IsEmpty(name string) (bool, error) {
@@ -176,7 +252,7 @@ func IsEmpty(name string) (bool, error) {
 	}
 	defer f.Close()
 
-	_, err = f.Readdir(1)
+	_, err = f.Readdirnames(1)
 	if err == io.EOF {
 		return true, nil
 	}
@@ -240,6 +316,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "R A D I S"
 	app.Usage = "Organize your music collection."
+	app.Version = "0.0.1"
 
 	app.Commands = []cli.Command{
 		{
@@ -269,6 +346,23 @@ func main() {
 				}
 				// scan again to remove empty directories
 				if err := deleteEmptyFolders(root); err != nil {
+					panic(err)
+				}
+			},
+		},
+		{
+			Name:    "check",
+			Aliases: []string{"find_awfulness"},
+			Usage:   "check every album is a flac version, list the heretics.",
+			Action: func(c *cli.Context) {
+				// scan folder in root
+				root, err := GetExistingPath(c.Args().First())
+				if err != nil {
+					panic(err)
+				}
+
+				// list non Flac albums
+				if err := findNonFlacAlbums(root); err != nil {
 					panic(err)
 				}
 			},
