@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-var reAlbum = regexp.MustCompile(`^([\pL\pP\pS\pN\d_ ]+) \(([0-9]+)\) ([\pL\pP\pS\pN\d]+)(\s\[MP3\])?$`)
+var reAlbum = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]+)\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
 
 type AlbumFolder struct {
 	Root      string
