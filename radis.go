@@ -111,6 +111,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 	movedAlbums := 0
 	uncategorized := 0
 	foundAlbums := 0
+	mp3Albums := 0
 	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -122,6 +123,9 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 			af := AlbumFolder{Root: root, Path: path}
 			if af.IsAlbum() {
 				foundAlbums++
+				if af.IsMP3 {
+					mp3Albums++
+				}
 				hasMoved := false
 				// fmt.Println("+ Found album: ", af.String())
 				found := false
@@ -156,7 +160,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 	if err != nil {
 		fmt.Printf("Error!")
 	}
-	fmt.Printf("Found %d albums, Moved %d.\n", foundAlbums, movedAlbums)
+	fmt.Printf("Found %d albums (%d MP3 albums), Moved %d.\n", foundAlbums, mp3Albums, movedAlbums)
 	if uncategorized != 0 {
 		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
 	}
