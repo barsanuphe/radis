@@ -74,9 +74,21 @@ delete empty directories in that `FOLDER`.
 What if you have something different?
 Then you should not use **radis**.
 
+Of course, you should only have flac versions of your music.
+Sometimes they do not exist, so these albums have a `[MP3]` suffix in the folder
+name.
+
+To list those offending albums, and check you have not missed any:
+
+    $ radis check FOLDER
+
+Where `FOLDER` is exactly the same as above.
+
 When in doubt:
 
     $ radis help
+
+
 
 ### Configuration
 
