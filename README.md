@@ -3,10 +3,12 @@
 ## What it is
 
 **radis** is a tool to help organize my music collection.
-It also is an excuse to learn Go.
+Can it be of any use to you?
+Unless you like your music organized like I do, probably not.
+See [Usage](#usage) to see what I mean.
 
-It reads configuration files to move albums in the correct genre and artist
-folders.
+So **radis** reads configuration files to move albums in the correct genre and
+artist folders.
 I could not get [beets](https://github.com/beetbox/beets) to organize things as
 I wanted, so **radis** is what I use once [beets](https://github.com/beetbox/beets)
 has imported (with correct tags, embedded art, etc) an album.
@@ -16,13 +18,24 @@ It does two things:
 - It helps with artists with more than one alias, so that an album is moved to
  `main alias/alias (year) album title`.
 - It also helps sorting artists into the genres *I* have decided they belong to.
+- It can also tell you which albums are mp3s instead of flac.
 
-[beets](https://github.com/beetbox/beets) can fetch genres from last.fm, but I
-am not satisfied with the results, as the genres seem to be too generic or much
-too specific to me.
+Ok, it does three things.
 
-It moves files around, deletes empty directories: **You may lose data.**
+*DISCLAIMER*: **radis** moves files around, deletes empty directories:
+**You may lose data.**
 Act as if you could lose everything and prepare accordingly.
+
+## Why it is
+
+[beets](https://github.com/beetbox/beets) can fetch genres from last.fm, but
+most of the time the results feel wrong to me: too generic or too specific.
+
+With **radis**, you decide which artist belong to which genre.
+If you decide Beethoven isn't Death Metal after all, change the configuration
+file and sync again.
+
+Also, this is an excuse to learn Go.
 
 ## Table of Contents
 
@@ -43,7 +56,7 @@ It is written in Go, so everything fits into a nice executable.
 
 If you have a working Go environnment, go get it:
 
-    $ go get XXXXXXX/radis
+    $ go get github.com/barsanuphe/radis
     $ go install ...radis
 
 The configuration files *radis_aliases.yaml* and *radis_genres.yaml* are
