@@ -59,7 +59,7 @@ func sortAlbums(c config.Config) (err error) {
 				}
 				if !found {
 					uncategorized++
-					hasMoved, err = af.MoveToNewPath("UNCATEGORIZED")
+					hasMoved, err = af.MoveToNewPath(c.Paths.UnsortedSubdir)
 				}
 				if hasMoved {
 					movedAlbums++

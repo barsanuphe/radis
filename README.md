@@ -21,6 +21,7 @@ It does two things:
 - It can also tell you which albums are mp3s instead of flac.
 
 Ok, it does three things.
+And it's quite fast too.
 
 *DISCLAIMER*: **radis** moves files around, deletes empty directories:
 **You may lose data.**
@@ -69,15 +70,15 @@ This command lists what was found in the configuration files:
 
     $ radis show
 
-This reorganizes your music collection in `FOLDER`:
+This reorganizes your music collection in the `Root` indicated in `radis.yaml`:
 
-    $ radis sync FOLDER
+    $ radis sync
 
-Make sure `FOLDER` is correct.
+Make sure `Root` is correct.
 **radis** will stop if the path does not exist, but otherwise it will at least
-delete empty directories in that `FOLDER`.
+delete empty directories in that `Root`.
 
-**radis** only works if you have this setup:
+Also, **radis** only works if you have this setup:
 
     root/
     |- Genre/
@@ -93,21 +94,25 @@ name.
 
 To list those offending albums, and check you have not missed any:
 
-    $ radis check FOLDER
-
-Where `FOLDER` is exactly the same as above.
+    $ radis check
 
 When in doubt:
 
     $ radis help
 
-
-
 ### Configuration
 
-**radis** uses two yaml files to describe
+**radis** uses three yaml files to describe
+- useful paths
 - artist aliases
 - artist genre
+
+`radis.yaml` looks like this:
+
+    Root:   /path/to/music/collection/
+    IncomingSubdir: INCOMING
+    UnsortedSubdir: UNCATEGORIZED
+    MPDPlaylistDirectory: /path/to/mpd/playlists/
 
 `radis_aliases.yaml` looks like this:
 
