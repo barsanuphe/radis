@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/barsanuphe/radis.svg?branch=master)](https://travis-ci.org/barsanuphe/radis)
 [![Report Card](http://goreportcard.com/badge/barsanuphe/radis)](http://goreportcard.com/report/barsanuphe/radis)
 [![Coverage Status](https://coveralls.io/repos/github/barsanuphe/radis/badge.svg?branch=master)](https://coveralls.io/github/barsanuphe/radis?branch=master)
+[![GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html)
 
 # Radis
 
