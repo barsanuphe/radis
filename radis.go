@@ -1,5 +1,7 @@
-// radis is a tool to keep your music collection in great shape.
+// Radis is a tool to keep your music collection in great shape.
 package main
+
+// TODO add usage info from README
 
 import (
 	"fmt"
@@ -7,86 +9,21 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/barsanuphe/radis/config"
 	"github.com/codegangsta/cli"
-	"launchpad.net/go-xdg"
 )
-
-// CONFIG ----------------------------------------------------------------------
-
-const (
-	radis                  = "radis"
-	radisGenresConfigFile  = radis + "_genres.yaml"
-	radisAliasesConfigFile = radis + "_aliases.yaml"
-	xdgGenrePath           = radis + "/" + radisGenresConfigFile
-	xdgAliasPath           = radis + "/" + radisAliasesConfigFile
-)
-
-func getConfigPaths() (genresConfigFile string, aliasesConfigFile string, err error) {
-	genresConfigFile, err = xdg.Config.Find(xdgGenrePath)
-	if err != nil {
-		genresConfigFile, err = xdg.Config.Ensure(xdgGenrePath)
-		if err != nil {
-			return
-		}
-		fmt.Println("Configuration file", genresConfigFile, "created. Populate it.")
-	}
-
-	aliasesConfigFile, err = xdg.Config.Find(xdgAliasPath)
-	if err != nil {
-		aliasesConfigFile, err = xdg.Config.Ensure(xdgAliasPath)
-		if err != nil {
-			return
-		}
-		fmt.Println("Configuration file", aliasesConfigFile, "created. Populate it.")
-	}
-	return
-}
-
-func LoadConfig() (aliases MainAlias, genres AllGenres, err error) {
-	// find configuration files
-	genresConfigFile, aliasesConfigFile, err := getConfigPaths()
-	if err != nil {
-		return
-	}
-	// load config files
-	aliases = MainAlias{}
-	if err = aliases.Load(aliasesConfigFile); err != nil {
-		return
-	}
-	genres = AllGenres{}
-	if err = genres.Load(genresConfigFile); err != nil {
-		return
-	}
-	return
-}
-
-func WriteConfig(aliases MainAlias, genres AllGenres) (err error) {
-	// find configuration files
-	genresConfigFile, aliasesConfigFile, err := getConfigPaths()
-	if err != nil {
-		return
-	}
-	// write ordered config files
-	if err = aliases.Write(aliasesConfigFile); err != nil {
-		return
-	}
-	if err = genres.Write(genresConfigFile); err != nil {
-		return
-	}
-	return
-}
 
 // SORT ------------------------------------------------------------------------
 
-func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
+func sortAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	fmt.Println("Scanning for albums in " + root + ".")
+	fmt.Println("Scanning for albums in " + c.Paths.Root + ".")
 	movedAlbums := 0
 	uncategorized := 0
 	foundAlbums := 0
 	mp3Albums := 0
-	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
+	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
 		if os.IsNotExist(walkError) {
@@ -94,7 +31,7 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-			af := AlbumFolder{Root: root, Path: path}
+			af := AlbumFolder{Root: c.Paths.Root, Path: path}
 			if af.IsAlbum() {
 				foundAlbums++
 				if af.IsMP3 {
@@ -105,14 +42,14 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 				found := false
 
 				// see if artist has known alias
-				for _, alias := range aliases {
+				for _, alias := range c.Aliases {
 					if alias.HasAlias(af.Artist) {
 						af.MainAlias = alias.MainAlias
 						break
 					}
 				}
 				// find which genre the artist or main alias belongs to
-				for _, genre := range genres {
+				for _, genre := range c.Genres {
 					// if artist is known, it belongs to genre.Name
 					if genre.HasArtist(af.MainAlias) || genre.HasCompilation(af.Title) {
 						hasMoved, err = af.MoveToNewPath(genre.Name)
@@ -127,6 +64,12 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 				if hasMoved {
 					movedAlbums++
 				}
+
+				// TODO: detect if inside c.MainConfig.IncomingSubdir
+				// try to find filepath.Rel( c.Paths.Root + c.Paths.IncomingSubdir, path), if err != nil, it's inside
+				// TODO: if it is, add to playlist automatically
+				// appendPlaylists(...)
+				// NOTE: how to detect if the albums move again afterwards? need to update playlists?
 			}
 		}
 		return
@@ -143,13 +86,13 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 
 // LIST NON FLAC ---------------------------------------------------------------
 
-func findNonFlacAlbums(root string) (err error) {
+func findNonFlacAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	fmt.Println("Scanning for non-Flac albums in " + root + ".")
+	fmt.Println("Scanning for non-Flac albums in " + c.Paths.Root + ".")
 	unFlagged := 0
 	nonFlacAlbums := 0
-	err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
+	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
 		if os.IsNotExist(walkError) {
@@ -157,14 +100,14 @@ func findNonFlacAlbums(root string) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-			af := AlbumFolder{Root: root, Path: path}
+			af := AlbumFolder{Root: c.Paths.Root, Path: path}
 			if af.IsAlbum() {
 				// scan contents for non-flac
 				isNonFlac, err := HasNonFlacFiles(path)
 				if err != nil {
 					panic(err)
 				}
-				relativePath, _ := filepath.Rel(root, path)
+				relativePath, _ := filepath.Rel(c.Paths.Root, path)
 				if isNonFlac {
 					fmt.Println("- ", relativePath)
 					nonFlacAlbums++
@@ -190,7 +133,7 @@ func findNonFlacAlbums(root string) (err error) {
 
 // CLEAN -----------------------------------------------------------------------
 
-func deleteEmptyFolders(root string) (err error) {
+func deleteEmptyFolders(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
 	fmt.Println("Scanning for empty directories.")
@@ -202,7 +145,7 @@ func deleteEmptyFolders(root string) (err error) {
 	for !atLeastOnce || deletedDirectoriesThisTime != 0 {
 		atLeastOnce = true
 		deletedDirectoriesThisTime = 0
-		err = filepath.Walk(root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
+		err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 			// when an album has just been removed, Walk goes through it a second
 			// time with an "file does not exist" error
 			if os.IsNotExist(walkError) {
@@ -238,12 +181,15 @@ func main() {
 	fmt.Println("\n\tR A D I S\n\t---------\n")
 
 	// load config
-	aliases, genres, err := LoadConfig()
-	if err != nil {
+	rc := config.Config{}
+	if err := rc.Load(); err != nil {
+		panic(err)
+	}
+	// check config
+	if err := rc.Check(); err != nil {
 		panic(err)
 	}
 
-	// cli: commands show / sync folder
 	app := cli.NewApp()
 	app.Name = "R A D I S"
 	app.Usage = "Organize your music collection."
@@ -256,8 +202,7 @@ func main() {
 			Usage:   "show configuration",
 			Action: func(c *cli.Context) {
 				// print config
-				fmt.Println(aliases.String())
-				fmt.Println(genres.String())
+				fmt.Println(rc.String())
 			},
 		},
 		{
@@ -265,18 +210,12 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "sync folder according to configuration",
 			Action: func(c *cli.Context) {
-				// scan folder in root
-				root, err := GetExistingPath(c.Args().First())
-				if err != nil {
-					panic(err)
-				}
-
 				// sort albums
-				if err := sortAlbums(root, aliases, genres); err != nil {
+				if err := sortAlbums(rc); err != nil {
 					panic(err)
 				}
 				// scan again to remove empty directories
-				if err := deleteEmptyFolders(root); err != nil {
+				if err := deleteEmptyFolders(rc); err != nil {
 					panic(err)
 				}
 			},
@@ -286,14 +225,8 @@ func main() {
 			Aliases: []string{"find_awfulness"},
 			Usage:   "check every album is a flac version, list the heretics.",
 			Action: func(c *cli.Context) {
-				// scan folder in root
-				root, err := GetExistingPath(c.Args().First())
-				if err != nil {
-					panic(err)
-				}
-
 				// list non Flac albums
-				if err := findNonFlacAlbums(root); err != nil {
+				if err := findNonFlacAlbums(rc); err != nil {
 					panic(err)
 				}
 			},
@@ -303,7 +236,7 @@ func main() {
 	app.Run(os.Args)
 
 	// write ordered config files
-	if err := WriteConfig(aliases, genres); err != nil {
+	if err := rc.Write(); err != nil {
 		panic(err)
 	}
 }
