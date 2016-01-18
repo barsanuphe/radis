@@ -1,5 +1,7 @@
 # Radis
 
+[![GoDoc](https://godoc.org/github.com/barsanuphe/radis?status.svg)](https://godoc.org/github.com/barsanuphe/radis)
+
 ## What it is
 
 **radis** is a tool to help organize my music collection.
@@ -156,4 +158,5 @@ They can be associated to a genre in the yaml file:
     - Blur
     Blues:
     - Various Artists | Rare Chicago Blues
+
 

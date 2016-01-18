@@ -1,3 +1,4 @@
+// Package to manage configuration files for radis.
 package config
 
 import (
