@@ -1,6 +1,6 @@
-# Radis
-
 [![GoDoc](https://godoc.org/github.com/barsanuphe/radis?status.svg)](https://godoc.org/github.com/barsanuphe/radis)
+
+# Radis
 
 ## What it is
 

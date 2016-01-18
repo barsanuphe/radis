@@ -1,7 +1,6 @@
 // Radis is a tool to keep your music collection in great shape.
+// 	see github.com/barsanuphe/radis
 package main
-
-// TODO add usage info from README
 
 import (
 	"fmt"
@@ -15,6 +14,7 @@ import (
 
 // SORT ------------------------------------------------------------------------
 
+// sortAlbums scans the music collection root and reorders albums according to the configuration files.
 func sortAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
@@ -86,6 +86,7 @@ func sortAlbums(c config.Config) (err error) {
 
 // LIST NON FLAC ---------------------------------------------------------------
 
+// findNonFlacAlbums scan the music collection root and lists all albums of mp3 files instead of flac.
 func findNonFlacAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
@@ -133,6 +134,7 @@ func findNonFlacAlbums(c config.Config) (err error) {
 
 // CLEAN -----------------------------------------------------------------------
 
+// deleteEmptyFolders deletes empty folders that may appear after sorting albums.
 func deleteEmptyFolders(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
