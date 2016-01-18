@@ -8,10 +8,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// MainAlias is a list of all Artists with aliases.
-type MainAlias []Artist
+// Aliases is a list of all Artists with aliases.
+type Aliases []Artist
 
-func (a *MainAlias) String() (text string) {
+func (a *Aliases) String() (text string) {
 	text = "All Aliases: \n"
 	for _, alias := range *a {
 		text += "\t" + alias.String()
@@ -19,20 +19,20 @@ func (a *MainAlias) String() (text string) {
 	return
 }
 
-func (a MainAlias) Len() int {
+func (a Aliases) Len() int {
 	return len(a)
 }
 
-func (a MainAlias) Less(i, j int) bool {
+func (a Aliases) Less(i, j int) bool {
 	return strings.ToLower(a[i].MainAlias) < strings.ToLower(a[j].MainAlias)
 }
 
-func (a MainAlias) Swap(i, j int) {
+func (a Aliases) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
 // Load the configuration file where the aliases are defined.
-func (a *MainAlias) Load(path string) (err error) {
+func (a *Aliases) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -53,7 +53,7 @@ func (a *MainAlias) Load(path string) (err error) {
 	return
 }
 
-func (a *MainAlias) Write(path string) (err error) {
+func (a *Aliases) Write(path string) (err error) {
 	sort.Sort(*a)
 	m := make(map[string][]string)
 	for _, alias := range *a {

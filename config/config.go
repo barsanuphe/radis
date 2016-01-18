@@ -12,8 +12,8 @@ import (
 // Config holds the configuration for radis.
 type Config struct {
 	Paths   MainConfig
-	Aliases MainAlias
-	Genres  AllGenres
+	Aliases Aliases
+	Genres  Genres
 }
 
 func (c *Config) String() string {

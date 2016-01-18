@@ -8,10 +8,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// AllGenres is a list of knows Genres and their artists.
-type AllGenres []Genre
+// Genres is a list of knows Genres and their artists.
+type Genres []Genre
 
-func (a *AllGenres) String() (text string) {
+func (a *Genres) String() (text string) {
 	text = "All Genres: \n"
 	for _, genre := range *a {
 		text += "\t" + genre.String()
@@ -19,21 +19,20 @@ func (a *AllGenres) String() (text string) {
 	return
 }
 
-func (a AllGenres) Len() int {
+func (a Genres) Len() int {
 	return len(a)
 }
 
-func (a AllGenres) Less(i, j int) bool {
+func (a Genres) Less(i, j int) bool {
 	return strings.ToLower(a[i].Name) < strings.ToLower(a[j].Name)
 }
 
-func (a AllGenres) Swap(i, j int) {
+func (a Genres) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-
 // Load the configuration file where the genres are defined.
-func (a *AllGenres) Load(path string) (err error) {
+func (a *Genres) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -54,7 +53,7 @@ func (a *AllGenres) Load(path string) (err error) {
 	return
 }
 
-func (a *AllGenres) Write(path string) (err error) {
+func (a *Genres) Write(path string) (err error) {
 	sort.Sort(*a)
 	m := make(map[string][]string)
 	for _, genre := range *a {
