@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// AllGenres is a list of knows Genres and their artists.
 type AllGenres []Genre
 
 func (a *AllGenres) String() (text string) {
@@ -30,6 +31,8 @@ func (a AllGenres) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
+
+// Load the configuration file where the genres are defined.
 func (a *AllGenres) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

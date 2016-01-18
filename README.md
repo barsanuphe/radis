@@ -1,5 +1,6 @@
 [![GoDoc](https://godoc.org/github.com/barsanuphe/radis?status.svg)](https://godoc.org/github.com/barsanuphe/radis)
 [![Build Status](https://travis-ci.org/barsanuphe/radis.svg?branch=master)](https://travis-ci.org/barsanuphe/radis)
+[![Report Card](http://goreportcard.com/badge/barsanuphe/radis)](http://goreportcard.com/report/barsanuphe/radis)
 
 # Radis
 

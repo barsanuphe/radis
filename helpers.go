@@ -80,4 +80,3 @@ func HasNonFlacFiles(albumPath string) (bool, error) {
 	}
 	return hasNonFlac, err
 }
-

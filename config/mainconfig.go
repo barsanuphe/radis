@@ -8,6 +8,7 @@ import (
 
 // TODO mark optional?
 
+// MainConfig contains useful paths for radis.
 type MainConfig struct {
 	Root                 string
 	IncomingSubdir       string
@@ -24,11 +25,13 @@ func (mc *MainConfig) String() string {
 	return txt
 }
 
-func (mc *MainConfig) Check() (error) {
+// Check all the paths in MainConfig exist
+func (mc *MainConfig) Check() error {
 	// TODO: check all directories exist
 	return nil
 }
 
+// Load the configuration file where the paths are defined.
 func (mc *MainConfig) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

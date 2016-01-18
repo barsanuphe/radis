@@ -1,4 +1,4 @@
-// Package to manage configuration files for radis.
+// Package config helps manage configuration files for radis.
 package config
 
 import (
@@ -9,8 +9,9 @@ import (
 
 // TODO mark optional for yaml?
 
+// Config holds the configuration for radis.
 type Config struct {
-	Paths    MainConfig
+	Paths   MainConfig
 	Aliases MainAlias
 	Genres  AllGenres
 }
@@ -19,7 +20,9 @@ func (c *Config) String() string {
 	return c.Paths.String() + c.Aliases.String() + c.Genres.String()
 }
 
-func (c *Config) Check() (error) {
+// Check the configuration for errors.
+// For now, checks the paths in radis.yaml
+func (c *Config) Check() error {
 	return c.Paths.Check()
 }
 

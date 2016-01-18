@@ -2,9 +2,10 @@ package config
 
 import "sort"
 
+// Artist can define the main alias for artists that have more than one.
 type Artist struct {
-	MainAlias    string
-	Aliases []string
+	MainAlias string
+	Aliases   []string
 }
 
 func (g *Artist) String() string {
@@ -15,6 +16,7 @@ func (g *Artist) String() string {
 	return txt
 }
 
+// HasAlias can check if an Artist has a given alias.
 func (g *Artist) HasAlias(alias string) bool {
 	sort.Strings(g.Aliases)
 	i := sort.SearchStrings(g.Aliases, alias)

@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MainAlias is a list of all Artists with aliases.
 type MainAlias []Artist
 
 func (a *MainAlias) String() (text string) {
@@ -30,6 +31,7 @@ func (a MainAlias) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
+// Load the configuration file where the aliases are defined.
 func (a *MainAlias) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

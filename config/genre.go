@@ -2,6 +2,7 @@ package config
 
 import "sort"
 
+// Genre is a struct defining a genre and the artists that belong to it.
 type Genre struct {
 	Name    string
 	Artists []string
@@ -15,6 +16,7 @@ func (g *Genre) String() string {
 	return txt
 }
 
+// HasArtist checks if the Genre contains a given artist.
 func (g *Genre) HasArtist(artist string) bool {
 	sort.Strings(g.Artists)
 	i := sort.SearchStrings(g.Artists, artist)
@@ -25,6 +27,7 @@ func (g *Genre) HasArtist(artist string) bool {
 	return false
 }
 
+// HasCompilation checks if the Genre contains a compilation with a specific title.
 func (g *Genre) HasCompilation(title string) bool {
 	fullTitle := "Various Artists | " + title
 	sort.Strings(g.Artists)
