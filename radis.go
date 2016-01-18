@@ -1,9 +1,8 @@
+// radis is a tool to keep your music collection in great shape.
 package main
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -77,31 +76,6 @@ func WriteConfig(aliases MainAlias, genres AllGenres) (err error) {
 	return
 }
 
-// HELPERS ---------------------------------------------------------------------
-
-func timeTrack(start time.Time, name string) {
-	elapsed := time.Since(start)
-	fmt.Printf("-- [%s done in %s]\n", name, elapsed)
-}
-
-func GetExistingPath(path string) (existingPath string, err error) {
-	// check root exists or pwd+root exists
-	if filepath.IsAbs(path) {
-		existingPath = path
-	} else {
-		pwd, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-		existingPath = filepath.Join(pwd, path)
-	}
-	// check root exists
-	if _, err = os.Stat(existingPath); os.IsNotExist(err) {
-		err = errors.New("Directory " + path + " does not exist!!!")
-	}
-	return
-}
-
 // SORT ------------------------------------------------------------------------
 
 func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
@@ -169,35 +143,6 @@ func sortAlbums(root string, aliases MainAlias, genres AllGenres) (err error) {
 
 // LIST NON FLAC ---------------------------------------------------------------
 
-func HasNonFlacFiles(directoryPath string) (bool, error) {
-	f, err := os.Open(directoryPath)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	fileList, err := f.Readdirnames(-1)
-	if err == io.EOF {
-		return true, nil
-	}
-
-	hasNonFlac := false
-	for _, file := range fileList {
-		switch filepath.Ext(file) {
-		case ".flac", ".jpg", ".jpeg", ".png":
-			// accepted extensions
-		case ".mp3", ".wma", ".m4a":
-			hasNonFlac = true
-			break
-		default:
-			fmt.Println("Found suspicious file ", file, " in ", directoryPath)
-			hasNonFlac = true
-			break
-		}
-	}
-	return hasNonFlac, err
-}
-
 func findNonFlacAlbums(root string) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
@@ -244,20 +189,6 @@ func findNonFlacAlbums(root string) (err error) {
 }
 
 // CLEAN -----------------------------------------------------------------------
-
-func IsEmpty(name string) (bool, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err
-}
 
 func deleteEmptyFolders(root string) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
