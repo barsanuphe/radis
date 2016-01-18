@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-var reAlbum = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]+)\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
+var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]+)\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
 
 type AlbumFolder struct {
 	Root      string
@@ -20,6 +20,7 @@ type AlbumFolder struct {
 	IsMP3     bool
 }
 
+// String gives a representation of an AlbumFolder.
 func (a *AlbumFolder) String() (albumName string) {
 	albumName = a.MainAlias + " / " + a.Artist + " (" + a.Year + ") " + a.Title
 	if a.IsMP3 {
@@ -28,6 +29,7 @@ func (a *AlbumFolder) String() (albumName string) {
 	return
 }
 
+// IsAlbum indicates if a directory name has the proper template to be an album.
 func (a *AlbumFolder) IsAlbum() bool {
 	if a.Artist != "" {
 		// directory name already parsed, no need to do it again
@@ -40,8 +42,9 @@ func (a *AlbumFolder) IsAlbum() bool {
 	return true
 }
 
+// ExtractInfo parses an AlbumFolder's basepath to extract information.
 func (a *AlbumFolder) ExtractInfo() (err error) {
-	matches := reAlbum.FindStringSubmatch(filepath.Base(a.Path))
+	matches := albumPattern.FindStringSubmatch(filepath.Base(a.Path))
 	if len(matches) > 0 {
 		a.Artist = matches[1]
 		a.MainAlias = a.Artist
@@ -54,9 +57,9 @@ func (a *AlbumFolder) ExtractInfo() (err error) {
 	return
 }
 
+// MoveToNewPath moves an album directory to its new home in another genre.
 func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
 	hasMoved = false
-
 	if !a.IsAlbum() {
 		return false, errors.New("Cannot move, not an album.")
 	}
@@ -78,7 +81,6 @@ func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
 				panic(err)
 			}
 		}
-
 		// move
 		err = os.Rename(a.Path, newPath)
 		if err == nil {
