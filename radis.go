@@ -12,8 +12,6 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-// SORT ------------------------------------------------------------------------
-
 // sortAlbums scans the music collection root and reorders albums according to the configuration files.
 func sortAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
@@ -84,8 +82,6 @@ func sortAlbums(c config.Config) (err error) {
 	return
 }
 
-// LIST NON FLAC ---------------------------------------------------------------
-
 // findNonFlacAlbums scan the music collection root and lists all albums of mp3 files instead of flac.
 func findNonFlacAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
@@ -132,8 +128,6 @@ func findNonFlacAlbums(c config.Config) (err error) {
 	return
 }
 
-// CLEAN -----------------------------------------------------------------------
-
 // deleteEmptyFolders deletes empty folders that may appear after sorting albums.
 func deleteEmptyFolders(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
@@ -176,8 +170,6 @@ func deleteEmptyFolders(c config.Config) (err error) {
 	fmt.Printf("Removed %d albums.\n", deletedDirectories)
 	return
 }
-
-// MAIN ------------------------------------------------------------------------
 
 func main() {
 	fmt.Println("\n\tR A D I S\n\t---------\n")
