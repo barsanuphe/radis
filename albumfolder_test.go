@@ -12,7 +12,7 @@ var albumsStrings = []struct {
 	{"hop", "/ () "},
 	{"arthi (2000) jqojdoijd", "arthi/arthi (2000) jqojdoijd"},
 	{"arthi (2000) jqojdoijd [MP3]", "arthi/arthi (2000) jqojdoijd [MP3]"},
-	// TODO more
+	{"arthi (2000) jqojdoijd [EP]", "arthi/arthi (2000) jqojdoijd [EP]"},
 }
 
 func TestString(t *testing.T) {
@@ -32,13 +32,20 @@ var albumsPaths = []struct {
 	{"hop", false},
 	{"arthi (2000) jqojdoijd", true},
 	{"arthi (2000) jqojdoijd [MP3]", true},
-	// TODO more
+	{"arthi (2000) jqojdoijd [EP]", true},
+	{"arthi (20010) jqojdoijd", false},
+	{"arthi (2010) jqojdoijd (??)--+", true},
 }
 
 func TestIsAlbum(t *testing.T) {
 	for _, ta := range albumsPaths {
 		a := AlbumFolder{Root: ".", Path: ta.folder}
-		if v := a.IsAlbum(); v != ta.expected {
+		v := a.IsAlbum()
+		if v != ta.expected {
+			t.Errorf("IsAlbum(%s) returned %v, expected %v", ta.folder, v, ta.expected)
+		}
+		// should return true the second time
+		if v && !a.IsAlbum() {
 			t.Errorf("IsAlbum(%s) returned %v, expected %v", ta.folder, v, ta.expected)
 		}
 	}
@@ -49,26 +56,37 @@ var albumsInfos = []struct {
 	Result AlbumFolder
 	Err    error
 }{
-	{"hop", AlbumFolder{Root:".", Path: "hop"}, errors.New("Not an album!")},
-	{"arthi (2000) jqojdoijd", AlbumFolder{
-		Root:      ".",
-		Path:      "arthi (2000) jqojdoijd",
-		Artist:    "arthi",
-		MainAlias: "arthi",
-		Year:      "2000",
-		Title:     "jqojdoijd",
-		IsMP3:     false,
-	}, nil},
-	{"arthi (2000) jqojdoijd [MP3]", AlbumFolder{
-		Root:      ".",
-		Path:      "arthi (2000) jqojdoijd",
-		Artist:    "arthi",
-		MainAlias: "arthi",
-		Year:      "2000",
-		Title:     "jqojdoijd",
-		IsMP3:     true,
-	}, nil},
-	// TODO more
+	{
+		"hop",
+		AlbumFolder{Root: ".", Path: "hop"},
+		errors.New("Not an album!"),
+	},
+	{
+		"arthi東京?-4. (2000) jqojdoijd(??)--+",
+		AlbumFolder{
+			Root:      ".",
+			Path:      "arthi東京?-4. (2000) jqojdoijd(??)--+",
+			Artist:    "arthi東京?-4.",
+			MainAlias: "arthi東京?-4.",
+			Year:      "2000",
+			Title:     "jqojdoijd(??)--+",
+			IsMP3:     false,
+		},
+		nil,
+	},
+	{
+		"arthi (2000) jqojdoijd [MP3]",
+		AlbumFolder{
+			Root:      ".",
+			Path:      "arthi (2000) jqojdoijd",
+			Artist:    "arthi",
+			MainAlias: "arthi",
+			Year:      "2000",
+			Title:     "jqojdoijd",
+			IsMP3:     true,
+		},
+		nil,
+	},
 }
 
 func TestExtractInfo(t *testing.T) {

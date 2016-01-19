@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]+)\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
+var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
 
 // AlbumFolder holds the information of an album directory.
 // An album follows the pattern: Artist (year) Album title
