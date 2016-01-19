@@ -24,9 +24,9 @@ type AlbumFolder struct {
 
 // String gives a representation of an AlbumFolder.
 func (a *AlbumFolder) String() (albumName string) {
-	albumName = a.MainAlias + " / " + a.Artist + " (" + a.Year + ") " + a.Title
+	albumName = a.MainAlias + "/" + a.Artist + " (" + a.Year + ") " + a.Title
 	if a.IsMP3 {
-		albumName += " [MP3]"
+		albumName += "[MP3]"
 	}
 	return
 }
