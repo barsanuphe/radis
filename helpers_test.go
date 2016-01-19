@@ -18,7 +18,7 @@ func TestIsEmpty(t *testing.T) {
 	}
 }
 
-var directoryDoesNotExistError = errors.New("Directory /ddsdcisj does not exist!!!")
+var errDirectoryDoesNotExist = errors.New("Directory /ddsdcisj does not exist!!!")
 var goPath = os.Getenv("GOPATH")
 
 var testPaths = []struct {
@@ -27,8 +27,8 @@ var testPaths = []struct {
 	err          error
 }{
 	{"/tmp", "/tmp", nil},
-	{"/ddsdcisj", "/ddsdcisj", directoryDoesNotExistError},
-	{"/ddsdcisj", "/ddsdcisj", directoryDoesNotExistError},
+	{"/ddsdcisj", "/ddsdcisj", errDirectoryDoesNotExist},
+	{"/ddsdcisj", "/ddsdcisj", errDirectoryDoesNotExist},
 	{"relative", filepath.Join(goPath, "src/github.com/barsanuphe/radis/relative"), errors.New("Directory relative does not exist!!!")},
 }
 

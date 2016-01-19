@@ -95,7 +95,7 @@ func TestExtractInfo(t *testing.T) {
 		err := a.ExtractInfo()
 		if err != ta.Err && a != ta.Result {
 			// TODO print err too
-			t.Errorf("ExtractInfo(%s) returned %d, expected %d", ta.Folder, a.String(), ta.Result)
+			t.Errorf("ExtractInfo(%s) returned %s, expected %s", ta.Folder, a.String(), ta.Result.String())
 		}
 	}
 }
