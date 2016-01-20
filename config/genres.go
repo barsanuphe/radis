@@ -47,17 +47,17 @@ func (a *Genres) Load(path string) (err error) {
 	for genre := range m {
 		var newGenre Genre
 		newGenre.Name = genre
+		sort.Strings(m[genre])
 		newGenre.Artists = m[genre]
 		*a = append(*a, newGenre)
 	}
+	sort.Sort(*a)
 	return
 }
 
 func (a *Genres) Write(path string) (err error) {
-	sort.Sort(*a)
 	m := make(map[string][]string)
 	for _, genre := range *a {
-		sort.Strings(genre.Artists)
 		m[genre.Name] = genre.Artists
 	}
 

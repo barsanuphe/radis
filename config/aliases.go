@@ -47,17 +47,17 @@ func (a *Aliases) Load(path string) (err error) {
 	for alias := range m {
 		var newAlias Artist
 		newAlias.MainAlias = alias
+		sort.Strings(m[alias])
 		newAlias.Aliases = m[alias]
 		*a = append(*a, newAlias)
 	}
+	sort.Sort(*a)
 	return
 }
 
 func (a *Aliases) Write(path string) (err error) {
-	sort.Sort(*a)
 	m := make(map[string][]string)
 	for _, alias := range *a {
-		sort.Strings(alias.Aliases)
 		m[alias.MainAlias] = alias.Aliases
 	}
 
