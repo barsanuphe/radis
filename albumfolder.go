@@ -15,6 +15,7 @@ var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([
 type AlbumFolder struct {
 	Root      string
 	Path      string
+	NewPath   string
 	Artist    string
 	MainAlias string
 	Year      string
@@ -67,7 +68,8 @@ func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
 	}
 
 	directoryName := filepath.Base(a.Path)
-	newPath := filepath.Join(a.Root, genre, a.MainAlias, directoryName)
+	a.NewPath = filepath.Join(genre, a.MainAlias, directoryName)
+	newPath := filepath.Join(a.Root, a.NewPath)
 	// comparer avec l'ancien
 	if newPath != a.Path {
 		// if different, move folder
