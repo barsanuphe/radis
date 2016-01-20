@@ -37,6 +37,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/barsanuphe/radis/config"
@@ -47,11 +48,15 @@ import (
 func sortAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	fmt.Println("Scanning for albums in " + c.Paths.Root + ".")
 	movedAlbums := 0
 	uncategorized := 0
 	foundAlbums := 0
 	mp3Albums := 0
+	today := time.Now().Local().Format("2006-01-02")
+	thisMonth := time.Now().Local().Format("2006-01")
+	dailyPlaylist := Playlist{Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, today+".m3u")}
+	monthlyPlaylist := Playlist{Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, thisMonth+".m3u")}
+	fmt.Println("Scanning for albums in " + c.Paths.Root + ".")
 	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -67,7 +72,6 @@ func sortAlbums(c config.Config) (err error) {
 					mp3Albums++
 				}
 				hasMoved := false
-				// fmt.Println("+ Found album: ", af.String())
 				found := false
 
 				// see if artist has known alias
@@ -94,11 +98,15 @@ func sortAlbums(c config.Config) (err error) {
 					movedAlbums++
 				}
 
-				// TODO: detect if inside c.MainConfig.IncomingSubdir
-				// try to find filepath.Rel( c.Paths.Root + c.Paths.IncomingSubdir, path), if err != nil, it's inside
-				// TODO: if it is, add to playlist automatically
-				// appendPlaylists(...)
-				// NOTE: how to detect if the albums move again afterwards? need to update playlists?
+				// find out if we should append playlists
+				isInsideIncoming := strings.Contains(path, filepath.Join(c.Paths.Root, c.Paths.IncomingSubdir))
+				if isInsideIncoming {
+					// album is inside INCOMING dir, add to playlist automatically
+					fmt.Println("  ++ " + af.String() + " was in INCOMING, adding to playlist.")
+					dailyPlaylist.Contents = append(dailyPlaylist.Contents, af)
+					monthlyPlaylist.Contents = append(monthlyPlaylist.Contents, af)
+				}
+
 			}
 		}
 		return
@@ -109,6 +117,13 @@ func sortAlbums(c config.Config) (err error) {
 	fmt.Printf("Found %d albums (%d MP3 albums), Moved %d.\n", foundAlbums, mp3Albums, movedAlbums)
 	if uncategorized != 0 {
 		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
+	}
+
+	if len(dailyPlaylist.Contents) != 0 {
+		fmt.Println("Writing playlist " + filepath.Base(dailyPlaylist.Filename) + ".")
+		dailyPlaylist.Write()
+		fmt.Println("Writing playlist " + filepath.Base(monthlyPlaylist.Filename) + ".")
+		monthlyPlaylist.Write()
 	}
 	return
 }
@@ -220,6 +235,7 @@ func main() {
 	app.Usage = "Organize your music collection."
 	app.Version = "0.0.1"
 
+	// TODO: playlist update subcommand
 	app.Commands = []cli.Command{
 		{
 			Name:    "config",
@@ -227,18 +243,18 @@ func main() {
 			Usage:   "options for configuration",
 			Subcommands: []cli.Command{
 				{
-					Name:  "show",
+					Name:    "show",
 					Aliases: []string{"ls"},
-					Usage: "show configuration",
+					Usage:   "show configuration",
 					Action: func(c *cli.Context) {
 						// print config
 						fmt.Println(rc.String())
 					},
 				},
 				{
-					Name:  "save",
+					Name:    "save",
 					Aliases: []string{"sa"},
-					Usage: "reorder and save configuration files",
+					Usage:   "reorder and save configuration files",
 					Action: func(c *cli.Context) {
 
 						if err := rc.Write(); err != nil {

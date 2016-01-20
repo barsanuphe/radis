@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"sort"
 )
 
 // timeTrack can be used to evaluate the time spent in a function.
@@ -79,4 +80,29 @@ func HasNonFlacFiles(albumPath string) (bool, error) {
 		}
 	}
 	return hasNonFlac, err
+}
+
+// GetMusicFiles returns a list of flacs and mp3s in an album
+func GetMusicFiles(albumPath string) (contents []string, err error) {
+	f, err := os.Open(albumPath)
+	if err != nil {
+		return []string{}, err
+	}
+	defer f.Close()
+
+	// get contents
+	fileList, err := f.Readdirnames(-1)
+	if err == io.EOF {
+		return []string{}, nil
+	}
+	// check for music files
+	for _, file := range fileList {
+		switch filepath.Ext(file) {
+		case ".flac", ".mp3":
+			// accepted extensions
+			contents = append(contents, filepath.Join(albumPath, file))
+		}
+	}
+	sort.Strings(contents)
+	return
 }
