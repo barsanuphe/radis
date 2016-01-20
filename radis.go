@@ -222,12 +222,31 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name:    "show",
-			Aliases: []string{"ls"},
-			Usage:   "show configuration",
-			Action: func(c *cli.Context) {
-				// print config
-				fmt.Println(rc.String())
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "options for configuration",
+			Subcommands: []cli.Command{
+				{
+					Name:  "show",
+					Aliases: []string{"ls"},
+					Usage: "show configuration",
+					Action: func(c *cli.Context) {
+						// print config
+						fmt.Println(rc.String())
+					},
+				},
+				{
+					Name:  "save",
+					Aliases: []string{"sa"},
+					Usage: "reorder and save configuration files",
+					Action: func(c *cli.Context) {
+
+						if err := rc.Write(); err != nil {
+							panic(err)
+						}
+						fmt.Println("Configuration files saved.")
+					},
+				},
 			},
 		},
 		{
@@ -259,9 +278,4 @@ func main() {
 	}
 
 	app.Run(os.Args)
-
-	// write ordered config files
-	if err := rc.Write(); err != nil {
-		panic(err)
-	}
 }
