@@ -52,12 +52,8 @@ func sortAlbums(c config.Config) (err error) {
 	uncategorized := 0
 	foundAlbums := 0
 	mp3Albums := 0
-	today := time.Now().Local().Format("2006-01-02")
-	thisMonth := time.Now().Local().Format("2006-01")
 
-	// TODO if they exist already, Load them + make Write() not append by default => this removes duplicates + updates
-	dailyPlaylist := Playlist{Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, today+".m3u")}
-	monthlyPlaylist := Playlist{Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, thisMonth+".m3u")}
+	dailyPlaylist, monthlyPlaylist := loadCurrentPlaylists(c)
 
 	fmt.Println("Scanning for albums in " + c.Paths.Root + ".")
 	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
@@ -109,11 +105,8 @@ func sortAlbums(c config.Config) (err error) {
 		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
 	}
 
-	if len(dailyPlaylist.Contents) != 0 {
-		fmt.Println("Writing playlist " + filepath.Base(dailyPlaylist.Filename) + ".")
-		dailyPlaylist.Write()
-		fmt.Println("Writing playlist " + filepath.Base(monthlyPlaylist.Filename) + ".")
-		monthlyPlaylist.Write()
+	if err := writePlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
+		panic(err)
 	}
 	return
 }

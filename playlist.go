@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/barsanuphe/radis/config"
 )
@@ -29,8 +30,9 @@ func (p *Playlist) Write() (err error) {
 		err = errors.New("Empty playlist, nothing to write.")
 		return
 	}
+
 	// open
-	f, err := os.OpenFile(p.Filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(p.Filename, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return
 	}
@@ -43,9 +45,6 @@ func (p *Playlist) Write() (err error) {
 
 	// append contents
 	for _, af := range p.Contents {
-		// TODO: in radis, load existing playlists, add new albums
-		// TODO: before write, Update()
-
 		files, err := GetMusicFiles(af.NewPath)
 		if err != nil {
 			return err
@@ -62,14 +61,15 @@ func (p *Playlist) Write() (err error) {
 // Update a playlist by parsing the AlbumFolders it contains and writing their new paths
 func (p *Playlist) Update(c config.Config) (err error) {
 	if len(p.Contents) == 0 {
-		return errors.New("Empty playlist.")
+		// nothing to do
+		return
 	}
-	for _, af := range p.Contents {
-		if err := af.ExtractInfo(); err != nil {
+	for i := range p.Contents {
+		if err := p.Contents[i].ExtractInfo(); err != nil {
 			panic(err)
 		}
 		// find the new path, so that it can be exported by Write
-		if _, err := af.FindNewPath(c); err != nil {
+		if _, err := p.Contents[i].FindNewPath(c); err != nil {
 			panic(err)
 		}
 	}
@@ -92,17 +92,22 @@ func (p *Playlist) RemoveDuplicates() (err error) {
 }
 
 // Load an existing playlist
-func (p *Playlist) Load(filename string, root string) (err error) {
+func (p *Playlist) Load(root string) (err error) {
 	// open file and get strings
-	content, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return
+	content, err := ioutil.ReadFile(p.Filename)
+	if os.IsNotExist(err) {
+		// file does not exist, nothing to do
+		return nil
+	} else if err != nil {
+		return err
 	}
 	lines := strings.Split(string(content), "\n")
 	//remove filename
 	albumsPaths := []string{}
 	for _, l := range lines {
-		albumsPaths = append(albumsPaths, filepath.Dir(l))
+		if l != "" {
+			albumsPaths = append(albumsPaths, filepath.Dir(l))
+		}
 	}
 	// remove duplicates
 	albumsPaths = removeDuplicatePaths(albumsPaths)
@@ -110,6 +115,58 @@ func (p *Playlist) Load(filename string, root string) (err error) {
 	// add AlbumFolder to Contents
 	for _, a := range albumsPaths {
 		p.Contents = append(p.Contents, AlbumFolder{Root: root, Path: a})
+	}
+	return
+}
+
+// loadCurrentPlaylists finds and loads current playlists
+func loadCurrentPlaylists(c config.Config) (daily Playlist, monthly Playlist) {
+	now := time.Now().Local()
+	thisDay := now.Format("2006-01-02")
+	thisMonth := now.Format("2006-01")
+
+	daily = Playlist{
+		Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, thisDay+".m3u"),
+	}
+	monthly = Playlist{
+		Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, thisMonth+".m3u"),
+	}
+
+	// Load the playlists if they exist
+	err := daily.Load(c.Paths.Root)
+	if err != nil {
+		panic(err)
+	}
+	err = monthly.Load(c.Paths.Root)
+	if err != nil {
+		panic(err)
+	}
+
+	// Update the playlists if they exist
+	err = daily.Update(c)
+	if err != nil {
+		panic(err)
+	}
+	err = monthly.Update(c)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+// writePlaylists after sync
+func writePlaylists(daily Playlist, monthly Playlist) (err error) {
+	if len(daily.Contents) != 0 {
+		fmt.Println("Writing playlist " + filepath.Base(daily.Filename) + ".")
+		err = daily.Write()
+		if err != nil {
+			return
+		}
+		fmt.Println("Writing playlist " + filepath.Base(monthly.Filename) + ".")
+		err = monthly.Write()
+		if err != nil {
+			return
+		}
 	}
 	return
 }
