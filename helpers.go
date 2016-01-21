@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 	"sort"
+	"time"
 )
 
 // timeTrack can be used to evaluate the time spent in a function.
@@ -15,6 +15,19 @@ import (
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	fmt.Printf("-- [%s done in %s]\n", name, elapsed)
+}
+
+// removeDuplicatePaths takes a slice of paths, return one without duplicates
+func removeDuplicatePaths(a []string) []string {
+	result := []string{}
+	seen := map[string]string{}
+	for _, val := range a {
+		if _, ok := seen[val]; !ok {
+			result = append(result, val)
+			seen[val] = val
+		}
+	}
+	return result
 }
 
 // IsEmpty checks if a directory is empty.

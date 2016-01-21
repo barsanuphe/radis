@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/barsanuphe/radis/config"
 )
 
 var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
@@ -13,9 +15,9 @@ var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([
 // AlbumFolder holds the information of an album directory.
 // An album follows the pattern: Artist (year) Album title
 type AlbumFolder struct {
-	Root      string
-	Path      string
-	NewPath   string
+	Root      string // absolute
+	Path      string // absolute
+	NewPath   string // absolute
 	Artist    string
 	MainAlias string
 	Year      string
@@ -60,24 +62,51 @@ func (a *AlbumFolder) ExtractInfo() (err error) {
 	return
 }
 
-// MoveToNewPath moves an album directory to its new home in another genre.
-func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
-	hasMoved = false
+// FindNewPath for an album according to configuration.
+func (a *AlbumFolder) FindNewPath(c config.Config) (hasGenre bool, err error) {
 	if !a.IsAlbum() {
-		return false, errors.New("Cannot move, not an album.")
+		err = errors.New("Not an album!")
+		return
 	}
 
+	// see if artist has known alias
+	for _, alias := range c.Aliases {
+		if alias.HasAlias(a.Artist) {
+			a.MainAlias = alias.MainAlias
+			break
+		}
+	}
+	// find which genre the artist or main alias belongs to
+	hasGenre = false
 	directoryName := filepath.Base(a.Path)
-	a.NewPath = filepath.Join(genre, a.MainAlias, directoryName)
-	newPath := filepath.Join(a.Root, a.NewPath)
+	for _, genre := range c.Genres {
+		// if artist is known, it belongs to genre.Name
+		if genre.HasArtist(a.MainAlias) || genre.HasCompilation(a.Title) {
+			a.NewPath = filepath.Join(a.Root, genre.Name, a.MainAlias, directoryName)
+			hasGenre = true
+			break
+		}
+	}
+	if !hasGenre {
+		a.NewPath = filepath.Join(a.Root, c.Paths.UnsortedSubdir, a.MainAlias, directoryName)
+	}
+	return
+}
+
+// MoveToNewPath moves an album directory to its new home in another genre.
+func (a *AlbumFolder) MoveToNewPath() (hasMoved bool, err error) {
+	hasMoved = false
+	if a.NewPath == "" {
+		return false, errors.New("FindNewPath first.")
+	}
 	// comparer avec l'ancien
-	if newPath != a.Path {
+	if a.NewPath != a.Path {
 		// if different, move folder
 		originalRelative, _ := filepath.Rel(a.Root, a.Path)
-		destRelative, _ := filepath.Rel(a.Root, newPath)
+		destRelative, _ := filepath.Rel(a.Root, a.NewPath)
 		fmt.Println("- "+originalRelative, " -> ", destRelative)
 
-		newPathParent := filepath.Dir(newPath)
+		newPathParent := filepath.Dir(a.NewPath)
 		if _, err = os.Stat(newPathParent); os.IsNotExist(err) {
 			// newPathParent does not exist, creating
 			err = os.MkdirAll(newPathParent, 0777)
@@ -86,7 +115,7 @@ func (a *AlbumFolder) MoveToNewPath(genre string) (hasMoved bool, err error) {
 			}
 		}
 		// move
-		err = os.Rename(a.Path, newPath)
+		err = os.Rename(a.Path, a.NewPath)
 		if err == nil {
 			hasMoved = true
 		}

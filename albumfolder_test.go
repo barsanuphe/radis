@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"testing"
+
+	"github.com/barsanuphe/radis/config"
 )
 
 var albumsStrings = []struct {
@@ -52,14 +54,20 @@ func TestIsAlbum(t *testing.T) {
 }
 
 var albumsInfos = []struct {
-	Folder string
-	Result AlbumFolder
-	Err    error
+	Folder          string
+	Result          AlbumFolder
+	Err             error
+	ExpectedNewPath string
+	ErrNewPath      error
+	HasGenre        bool
 }{
 	{
 		"hop",
 		AlbumFolder{Root: ".", Path: "hop"},
 		errors.New("Not an album!"),
+		"",
+		errors.New("Not an album!"),
+		false,
 	},
 	{
 		"arthi東京?-4. (2000) jqojdoijd(??)--+",
@@ -73,6 +81,9 @@ var albumsInfos = []struct {
 			IsMP3:     false,
 		},
 		nil,
+		"genre1/PPP/arthi東京?-4. (2000) jqojdoijd(??)--+",
+		nil,
+		true,
 	},
 	{
 		"arthi (2000) jqojdoijd [MP3]",
@@ -86,6 +97,20 @@ var albumsInfos = []struct {
 			IsMP3:     true,
 		},
 		nil,
+		"UNCATEGORIZED/arthi/arthi (2000) jqojdoijd",
+		nil,
+		false,
+	},
+}
+
+var c = config.Config{
+	Paths: config.MainConfig{UnsortedSubdir: "UNCATEGORIZED"},
+	Aliases: config.Aliases{
+		config.Artist{MainAlias: "PPP", Aliases: []string{"arthi東京?-4."}},
+		config.Artist{MainAlias: "CCC", Aliases: []string{"arthij"}},
+	},
+	Genres: config.Genres{
+		config.Genre{Name: "genre1", Artists: []string{"PPP", "RRR"}},
 	},
 }
 
@@ -94,8 +119,22 @@ func TestExtractInfo(t *testing.T) {
 		a := AlbumFolder{Root: ".", Path: ta.Folder}
 		err := a.ExtractInfo()
 		if err != ta.Err && a != ta.Result {
-			// TODO print err too
 			t.Errorf("ExtractInfo(%s) returned %s, expected %s", ta.Folder, a.String(), ta.Result.String())
+		}
+	}
+}
+
+func TestFindNewPath(t *testing.T) {
+	for _, ta := range albumsInfos {
+		hasGenre, err := ta.Result.FindNewPath(c)
+		if err != nil && err.Error() != ta.ErrNewPath.Error() {
+			t.Errorf("TestFindNewPath(%s) returned err %s, expected %s", ta.Folder, err.Error(), ta.ErrNewPath.Error())
+		}
+		if hasGenre != ta.HasGenre {
+			t.Errorf("TestFindNewPath(%s) returned hasGenre %v, expected %v", ta.Folder, hasGenre, ta.HasGenre)
+		}
+		if ta.Result.NewPath != ta.ExpectedNewPath {
+			t.Errorf("TestFindNewPath(%s) returned NewPath %s, expected %s", ta.Folder, ta.Result.NewPath, ta.ExpectedNewPath)
 		}
 	}
 }

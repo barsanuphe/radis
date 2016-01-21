@@ -54,8 +54,11 @@ func sortAlbums(c config.Config) (err error) {
 	mp3Albums := 0
 	today := time.Now().Local().Format("2006-01-02")
 	thisMonth := time.Now().Local().Format("2006-01")
+
+	// TODO if they exist already, Load them + make Write() not append by default => this removes duplicates + updates
 	dailyPlaylist := Playlist{Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, today+".m3u")}
 	monthlyPlaylist := Playlist{Filename: filepath.Join(c.Paths.MPDPlaylistDirectory, thisMonth+".m3u")}
+
 	fmt.Println("Scanning for albums in " + c.Paths.Root + ".")
 	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
@@ -71,28 +74,16 @@ func sortAlbums(c config.Config) (err error) {
 				if af.IsMP3 {
 					mp3Albums++
 				}
-				hasMoved := false
-				found := false
-
-				// see if artist has known alias
-				for _, alias := range c.Aliases {
-					if alias.HasAlias(af.Artist) {
-						af.MainAlias = alias.MainAlias
-						break
-					}
+				hasGenre, err := af.FindNewPath(c)
+				if err != nil {
+					panic(err)
 				}
-				// find which genre the artist or main alias belongs to
-				for _, genre := range c.Genres {
-					// if artist is known, it belongs to genre.Name
-					if genre.HasArtist(af.MainAlias) || genre.HasCompilation(af.Title) {
-						hasMoved, err = af.MoveToNewPath(genre.Name)
-						found = true
-						break
-					}
-				}
-				if !found {
+				if !hasGenre {
 					uncategorized++
-					hasMoved, err = af.MoveToNewPath(c.Paths.UnsortedSubdir)
+				}
+				hasMoved, err := af.MoveToNewPath()
+				if err != nil {
+					panic(err)
 				}
 				if hasMoved {
 					movedAlbums++
@@ -106,7 +97,6 @@ func sortAlbums(c config.Config) (err error) {
 					dailyPlaylist.Contents = append(dailyPlaylist.Contents, af)
 					monthlyPlaylist.Contents = append(monthlyPlaylist.Contents, af)
 				}
-
 			}
 		}
 		return
