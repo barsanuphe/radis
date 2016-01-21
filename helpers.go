@@ -59,23 +59,31 @@ func GetExistingPath(path string) (existingPath string, err error) {
 	}
 	// check root exists
 	if _, err = os.Stat(existingPath); os.IsNotExist(err) {
-		err = errors.New("Directory " + path + " does not exist!!!")
+		err = errors.New("Path " + path + " does not exist!!!")
 	}
 	return
 }
 
-// HasNonFlacFiles returns true if an album contains files other than flac songs and cover pictures.
-func HasNonFlacFiles(albumPath string) (bool, error) {
-	f, err := os.Open(albumPath)
+func getFiles(path string) (contents []string, err error) {
+	f, err := os.Open(path)
 	if err != nil {
-		return false, err
+		return []string{}, err
 	}
 	defer f.Close()
 
 	// get contents
 	fileList, err := f.Readdirnames(-1)
 	if err == io.EOF {
-		return true, nil
+		return []string{}, nil
+	}
+	return fileList, err
+}
+
+// HasNonFlacFiles returns true if an album contains files other than flac songs and cover pictures.
+func HasNonFlacFiles(albumPath string) (bool, error) {
+	fileList, err := getFiles(albumPath)
+	if err != nil {
+		return false, err
 	}
 	// check for suspicious files
 	hasNonFlac := false
@@ -97,16 +105,9 @@ func HasNonFlacFiles(albumPath string) (bool, error) {
 
 // GetMusicFiles returns a list of flacs and mp3s in an album
 func GetMusicFiles(albumPath string) (contents []string, err error) {
-	f, err := os.Open(albumPath)
+	fileList, err := getFiles(albumPath)
 	if err != nil {
 		return []string{}, err
-	}
-	defer f.Close()
-
-	// get contents
-	fileList, err := f.Readdirnames(-1)
-	if err == io.EOF {
-		return []string{}, nil
 	}
 	// check for music files
 	for _, file := range fileList {
@@ -114,6 +115,23 @@ func GetMusicFiles(albumPath string) (contents []string, err error) {
 		case ".flac", ".mp3":
 			// accepted extensions
 			contents = append(contents, filepath.Join(albumPath, file))
+		}
+	}
+	sort.Strings(contents)
+	return
+}
+
+// GetPlaylistFiles returns a list of .m3u files.
+func GetPlaylistFiles(playlistRoot string) (contents []string, err error) {
+	fileList, err := getFiles(playlistRoot)
+	if err != nil {
+		return []string{}, err
+	}
+	// check for m3u files
+	for _, file := range fileList {
+		if filepath.Ext(file) == ".m3u" {
+			// accepted extensions
+			contents = append(contents, file)
 		}
 	}
 	sort.Strings(contents)

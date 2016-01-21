@@ -105,7 +105,7 @@ func sortAlbums(c config.Config) (err error) {
 		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
 	}
 
-	if err := writePlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
+	if err := writeCurrentPlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
 		panic(err)
 	}
 	return
@@ -218,7 +218,6 @@ func main() {
 	app.Usage = "Organize your music collection."
 	app.Version = "0.0.1"
 
-	// TODO: playlist update subcommand
 	app.Commands = []cli.Command{
 		{
 			Name:    "config",
@@ -244,6 +243,40 @@ func main() {
 							panic(err)
 						}
 						fmt.Println("Configuration files saved.")
+					},
+				},
+			},
+		},
+		{
+			Name:    "playlist",
+			Aliases: []string{"p"},
+			Usage:   "options for playlist",
+			Subcommands: []cli.Command{
+				{
+					Name:    "show",
+					Aliases: []string{"ls"},
+					Usage:   "list playlists",
+					Action: func(c *cli.Context) {
+						fmt.Println("Playlists: ")
+						files, err := GetPlaylistFiles(rc.Paths.MPDPlaylistDirectory)
+						if err != nil {
+							fmt.Println(err.Error())
+						}
+						for _, file := range files {
+							fmt.Println(" - " + file)
+						}
+					},
+				},
+				{
+					Name:    "update",
+					Aliases: []string{"up"},
+					Usage:   "update playlist according to configuration.",
+					Action: func(c *cli.Context) {
+						fmt.Println("Updating " + c.Args().First())
+						p := Playlist{Filename: filepath.Join(rc.Paths.MPDPlaylistDirectory, c.Args().First())}
+						if err := p.UpdateAndSave(rc); err != nil {
+							fmt.Println(err.Error())
+						}
 					},
 				},
 			},

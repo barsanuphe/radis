@@ -24,54 +24,14 @@ func (p *Playlist) String() (playlist string) {
 	return
 }
 
-// Write the playlist or append it if it exists
-func (p *Playlist) Write() (err error) {
-	if len(p.Contents) == 0 {
-		err = errors.New("Empty playlist, nothing to write.")
-		return
-	}
-
-	// open
-	f, err := os.OpenFile(p.Filename, os.O_WRONLY|os.O_CREATE, 0600)
+// Exists finds out if a Playlist is valid or not
+func (p *Playlist) Exists() (isPlaylist bool, err error) {
+	path, err := GetExistingPath(p.Filename)
 	if err != nil {
 		return
 	}
-	defer f.Close()
-
-	// remove duplicates
-	if err := p.RemoveDuplicates(); err != nil {
-		return err
-	}
-
-	// append contents
-	for _, af := range p.Contents {
-		files, err := GetMusicFiles(af.NewPath)
-		if err != nil {
-			return err
-		}
-		for _, file := range files {
-			if _, err = f.WriteString(file + "\n"); err != nil {
-				return err
-			}
-		}
-	}
-	return
-}
-
-// Update a playlist by parsing the AlbumFolders it contains and writing their new paths
-func (p *Playlist) Update(c config.Config) (err error) {
-	if len(p.Contents) == 0 {
-		// nothing to do
-		return
-	}
-	for i := range p.Contents {
-		if err := p.Contents[i].ExtractInfo(); err != nil {
-			panic(err)
-		}
-		// find the new path, so that it can be exported by Write
-		if _, err := p.Contents[i].FindNewPath(c); err != nil {
-			panic(err)
-		}
+	if filepath.Ext(path) == ".m3u" {
+		isPlaylist = true
 	}
 	return
 }
@@ -119,6 +79,90 @@ func (p *Playlist) Load(root string) (err error) {
 	return
 }
 
+// Update a playlist by parsing the AlbumFolders it contains and writing their new paths
+func (p *Playlist) Update(c config.Config) (err error) {
+	if len(p.Contents) == 0 {
+		// nothing to do
+		return
+	}
+	for i := range p.Contents {
+		if err := p.Contents[i].ExtractInfo(); err != nil {
+			panic(err)
+		}
+		// find the new path, so that it can be exported by Write
+		if _, err := p.Contents[i].FindNewPath(c); err != nil {
+			panic(err)
+		}
+	}
+	return
+}
+
+// Write the playlist or append it if it exists
+func (p *Playlist) Write() (err error) {
+	if len(p.Contents) == 0 {
+		err = errors.New("Empty playlist, nothing to write.")
+		return
+	}
+
+	// remove duplicates
+	if err := p.RemoveDuplicates(); err != nil {
+		return err
+	}
+
+	// append contents
+	contents := []string{}
+	for _, af := range p.Contents {
+		files, err := GetMusicFiles(af.NewPath)
+		if os.IsNotExist(err) {
+			return errors.New("Could not find path " + af.NewPath + "; have you synced lately?")
+		} else if err != nil {
+			return err
+		}
+		for i := range files {
+			contents = append(contents, files[i])
+		}
+	}
+
+	// write if everything is good.
+	f, err := os.OpenFile(p.Filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	for _, file := range contents {
+		if _, err = f.WriteString(file + "\n"); err != nil {
+			return err
+		}
+	}
+	return
+}
+
+// UpdateAndSave a Playlist file.
+func (p *Playlist) UpdateAndSave(c config.Config) (err error) {
+	isPlaylist, err := p.Exists()
+	if err != nil {
+		return
+	} else if !isPlaylist {
+		return errors.New(p.Filename + "does not exist!")
+	}
+	// Load the playlist
+	err = p.Load(c.Paths.Root)
+	if err != nil {
+		panic(err)
+	}
+	// Update the playlist
+	err = p.Update(c)
+	if err != nil {
+		panic(err)
+	}
+	// Write the playlist
+	err = p.Write()
+	if err != nil {
+		return
+	}
+	return
+}
+
 // loadCurrentPlaylists finds and loads current playlists
 func loadCurrentPlaylists(c config.Config) (daily Playlist, monthly Playlist) {
 	now := time.Now().Local()
@@ -155,13 +199,15 @@ func loadCurrentPlaylists(c config.Config) (daily Playlist, monthly Playlist) {
 }
 
 // writePlaylists after sync
-func writePlaylists(daily Playlist, monthly Playlist) (err error) {
+func writeCurrentPlaylists(daily Playlist, monthly Playlist) (err error) {
 	if len(daily.Contents) != 0 {
 		fmt.Println("Writing playlist " + filepath.Base(daily.Filename) + ".")
 		err = daily.Write()
 		if err != nil {
 			return
 		}
+	}
+	if len(monthly.Contents) != 0 {
 		fmt.Println("Writing playlist " + filepath.Base(monthly.Filename) + ".")
 		err = monthly.Write()
 		if err != nil {
