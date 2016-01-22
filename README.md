@@ -19,14 +19,18 @@ I could not get [beets](https://github.com/beetbox/beets) to organize things as
 I wanted, so **radis** is what I use once [beets](https://github.com/beetbox/beets)
 has imported (with correct tags, embedded art, etc) an album.
 
-It does two things:
+It does a few things:
 
 - It helps with artists with more than one alias, so that an album is moved to
  `main alias/alias (year) album title`.
 - It also helps sorting artists into the genres *I* have decided they belong to.
+- If it is sorting them out of an "incoming" folder, it treats the albums as new
+to your collection and automatically generates daily/monthly
+[MPD](http://www.musicpd.org/) playlists of your new music.
+- It can list and update the above-mentionned playlists if the albums have moved
+since their creation.
 - It can also tell you which albums are mp3s instead of flac.
 
-Ok, it does three things.
 And it's quite fast too.
 
 *DISCLAIMER*: **radis** moves files around, deletes empty directories:
@@ -74,7 +78,11 @@ You might want to `ln -s` your actual configuration files there.
 
 This command lists what was found in the configuration files:
 
-    $ radis show
+    $ radis config show
+
+This loads, sorts, and save the configuration files, for better readability:
+
+    $ radis config save
 
 This reorganizes your music collection in the `Root` indicated in `radis.yaml`:
 
@@ -102,6 +110,14 @@ To list those offending albums, and check you have not missed any:
 
     $ radis check
 
+To list known playlists:
+
+    $ radis playlist show
+
+And to update them after a `radis sync` that has moved albums around:
+
+    $ radis playlist update
+
 When in doubt:
 
     $ radis help
@@ -115,10 +131,15 @@ When in doubt:
 
 `radis.yaml` looks like this:
 
+    # where your music is, assumed to be your MPD music_directory
     Root:   /path/to/music/collection/
+    # if albums are found there, they will be added to MPD playlists
     IncomingSubdir: INCOMING
+    # albums without genres are put there
     UnsortedSubdir: UNCATEGORIZED
+    # playlists are created there
     MPDPlaylistDirectory: /path/to/mpd/playlists/
+
 
 `radis_aliases.yaml` looks like this:
 
@@ -139,8 +160,8 @@ They can be associated to a genre in the yaml file:
     - artist
     - Various Artists | compilation title
 
-
-**radis** reorders the files each time it runs, so that they get easier to read.
+Remember you can use `radis config save` to reorder the files for aliases and
+genres.
 
 ### Configuration examples
 
@@ -149,6 +170,7 @@ They can be associated to a genre in the yaml file:
     MF DOOM:
     - MadVillain
     - JJ DOOM
+    - Viktor Vaughn
     Radiohead:
     - Thom Yorke
     - Jonny Greenwood
