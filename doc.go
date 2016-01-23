@@ -1,20 +1,42 @@
-/* Radis is a tool to keep your music collection in great shape.
+/*
+Radis is a tool to keep your music collection in great shape.
 
- That is, provided your music collection is organized like this:
+
+Prerequisites
+
+Radis works, provided your music collection is organized like this:
 
 	root/Genre/Artist/Artist (year) Album
 
- Radis can sort albums according to user-defined genres and user-defined artist
- aliases.
- It can track newly imported albums and adds them automatically to MPD
- playlists.
- These playlists can be updated if the albums move later.
- It can list albums not encoded in flac, as they should all be.
+And that the necessary configuration files exist.
 
- See github.com/barsanuphe/radis for more information, including how to create
- the necessary configuration files.
- 
- Usage:
+
+What it does
+
+Radis can sort albums according to user-defined genres and user-defined artist
+aliases.
+
+It can track newly imported albums and adds them automatically to MPD
+playlists.
+
+These playlists can be updated if the albums move later.
+
+It can list albums not encoded in flac, as they should all be.
+
+
+More information
+
+See http://github.com/barsanuphe/radis for more information, including how to
+create the necessary configuration files.
+
+
+Usage
+
+When in doubt, try
+
+	radis help
+
+which should display something  like:
 
 			R A D I S
 			---------
@@ -38,7 +60,5 @@
 	GLOBAL OPTIONS:
 	   --help, -h           show help
 	   --version, -v        print the version
-
-
 */
 package main
