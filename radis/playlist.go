@@ -3,13 +3,13 @@ package radis
 import (
 	"errors"
 	"fmt"
+	"github.com/barsanuphe/radis/config"
+	"github.com/barsanuphe/radis/helpers"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/barsanuphe/radis/config"
 )
 
 // Playlist can generate .m3u playlists from a list of AlbumFolders.
@@ -26,7 +26,7 @@ func (p *Playlist) String() (playlist string) {
 
 // Exists finds out if a Playlist is valid or not
 func (p *Playlist) Exists() (isPlaylist bool, err error) {
-	path, err := GetExistingPath(p.Filename)
+	path, err := helpers.GetExistingPath(p.Filename)
 	if err != nil {
 		return
 	}
@@ -70,7 +70,7 @@ func (p *Playlist) Load(root string) (err error) {
 		}
 	}
 	// remove duplicates
-	albumsPaths = removeDuplicatePaths(albumsPaths)
+	albumsPaths = helpers.RemoveDuplicatePaths(albumsPaths)
 
 	// add AlbumFolder to Contents
 	for _, a := range albumsPaths {
@@ -112,7 +112,7 @@ func (p *Playlist) Write() (err error) {
 	// append contents
 	contents := []string{}
 	for _, af := range p.contents {
-		files, err := GetMusicFiles(af.NewPath)
+		files, err := helpers.GetMusicFiles(af.NewPath)
 		if os.IsNotExist(err) {
 			return errors.New("Could not find path " + af.NewPath + "; have you synced lately?")
 		} else if err != nil {

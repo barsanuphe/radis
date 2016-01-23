@@ -7,11 +7,9 @@ import (
 	"launchpad.net/go-xdg"
 )
 
-// TODO mark optional for yaml?
-
 // Config holds the configuration for radis.
 type Config struct {
-	Paths   MainConfig
+	Paths   Paths
 	Aliases Aliases
 	Genres  Genres
 }

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/barsanuphe/radis/config"
+	"github.com/barsanuphe/radis/helpers"
 	"github.com/barsanuphe/radis/radis"
 	"github.com/codegangsta/cli"
 )
@@ -68,7 +69,7 @@ func main() {
 					Usage:   "list playlists",
 					Action: func(c *cli.Context) {
 						fmt.Println("Playlists: ")
-						files, err := radis.GetPlaylistFiles(rc.Paths.MPDPlaylistDirectory)
+						files, err := helpers.GetPlaylistFiles(rc.Paths.MPDPlaylistDirectory)
 						if err != nil {
 							fmt.Println(err.Error())
 						}

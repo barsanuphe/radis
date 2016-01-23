@@ -104,7 +104,7 @@ var albumsInfos = []struct {
 }
 
 var c = config.Config{
-	Paths: config.MainConfig{UnsortedSubdir: "UNCATEGORIZED"},
+	Paths: config.Paths{UnsortedSubdir: "UNCATEGORIZED"},
 	Aliases: config.Aliases{
 		config.Artist{MainAlias: "PPP", Aliases: []string{"arthi東京?-4."}},
 		config.Artist{MainAlias: "CCC", Aliases: []string{"arthij"}},
