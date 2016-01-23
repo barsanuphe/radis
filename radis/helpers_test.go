@@ -1,4 +1,4 @@
-package main
+package radis
 
 import (
 	"errors"
@@ -29,7 +29,7 @@ var testPaths = []struct {
 	{"/tmp", "/tmp", nil},
 	{"/ddsdcisj", "/ddsdcisj", errDirectoryDoesNotExist},
 	{"/ddsdcisj", "/ddsdcisj", errDirectoryDoesNotExist},
-	{"relative", filepath.Join(goPath, "src/github.com/barsanuphe/radis/relative"), errors.New("Path relative does not exist!!!")},
+	{"relative", filepath.Join(goPath, "src/github.com/barsanuphe/radis/radis/relative"), errors.New("Path relative does not exist!!!")},
 }
 
 func TestGetExistingPath(t *testing.T) {

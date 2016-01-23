@@ -1,4 +1,4 @@
-package main
+package radis
 
 import (
 	"errors"
@@ -15,12 +15,12 @@ import (
 // Playlist can generate .m3u playlists from a list of AlbumFolders.
 type Playlist struct {
 	Filename string
-	Contents []AlbumFolder
+	contents []AlbumFolder
 }
 
 // String gives a representation of an Playlist.
 func (p *Playlist) String() (playlist string) {
-	playlist = fmt.Sprintf("%s: %d albums", p.Filename, len(p.Contents))
+	playlist = fmt.Sprintf("%s: %d albums", p.Filename, len(p.contents))
 	return
 }
 
@@ -40,14 +40,14 @@ func (p *Playlist) Exists() (isPlaylist bool, err error) {
 func (p *Playlist) RemoveDuplicates() (err error) {
 	result := []AlbumFolder{}
 	seen := map[string]AlbumFolder{}
-	for _, val := range p.Contents {
+	for _, val := range p.contents {
 		if _, ok := seen[val.Path]; !ok {
 			result = append(result, val)
 			seen[val.Path] = val
 		}
 	}
 	// replace contents
-	p.Contents = result
+	p.contents = result
 	return
 }
 
@@ -74,23 +74,23 @@ func (p *Playlist) Load(root string) (err error) {
 
 	// add AlbumFolder to Contents
 	for _, a := range albumsPaths {
-		p.Contents = append(p.Contents, AlbumFolder{Root: root, Path: a})
+		p.contents = append(p.contents, AlbumFolder{Root: root, Path: a})
 	}
 	return
 }
 
 // Update a playlist by parsing the AlbumFolders it contains and writing their new paths
 func (p *Playlist) Update(c config.Config) (err error) {
-	if len(p.Contents) == 0 {
+	if len(p.contents) == 0 {
 		// nothing to do
 		return
 	}
-	for i := range p.Contents {
-		if err := p.Contents[i].ExtractInfo(); err != nil {
+	for i := range p.contents {
+		if err := p.contents[i].ExtractInfo(); err != nil {
 			panic(err)
 		}
 		// find the new path, so that it can be exported by Write
-		if _, err := p.Contents[i].FindNewPath(c); err != nil {
+		if _, err := p.contents[i].FindNewPath(c); err != nil {
 			panic(err)
 		}
 	}
@@ -99,7 +99,7 @@ func (p *Playlist) Update(c config.Config) (err error) {
 
 // Write the playlist or append it if it exists
 func (p *Playlist) Write() (err error) {
-	if len(p.Contents) == 0 {
+	if len(p.contents) == 0 {
 		err = errors.New("Empty playlist, nothing to write.")
 		return
 	}
@@ -111,7 +111,7 @@ func (p *Playlist) Write() (err error) {
 
 	// append contents
 	contents := []string{}
-	for _, af := range p.Contents {
+	for _, af := range p.contents {
 		files, err := GetMusicFiles(af.NewPath)
 		if os.IsNotExist(err) {
 			return errors.New("Could not find path " + af.NewPath + "; have you synced lately?")
@@ -119,7 +119,12 @@ func (p *Playlist) Write() (err error) {
 			return err
 		}
 		for i := range files {
-			contents = append(contents, files[i])
+			// MPD wants relative paths
+			relativePath, err := filepath.Rel(af.Root, files[i])
+			if err != nil {
+				panic(err)
+			}
+			contents = append(contents, relativePath)
 		}
 	}
 
@@ -200,14 +205,14 @@ func loadCurrentPlaylists(c config.Config) (daily Playlist, monthly Playlist) {
 
 // writePlaylists after sync
 func writeCurrentPlaylists(daily Playlist, monthly Playlist) (err error) {
-	if len(daily.Contents) != 0 {
+	if len(daily.contents) != 0 {
 		fmt.Println("Writing playlist " + filepath.Base(daily.Filename) + ".")
 		err = daily.Write()
 		if err != nil {
 			return
 		}
 	}
-	if len(monthly.Contents) != 0 {
+	if len(monthly.contents) != 0 {
 		fmt.Println("Writing playlist " + filepath.Base(monthly.Filename) + ".")
 		err = monthly.Write()
 		if err != nil {
