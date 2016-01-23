@@ -1,36 +1,3 @@
-// Radis is a tool to keep your music collection in great shape.
-//
-// That is, provided your music collection is organized like this:
-//
-//	root/Genre/Artist/Artist (year) Album
-//
-// see github.com/barsanuphe/radis for more information.
-//
-// Usage:
-//
-// This command lists what was found in the configuration files:
-//
-//    $ radis show
-//
-// This reorganizes your music collection in the "Root" indicated in radis.yaml:
-//
-//   $ radis sync
-//
-// Make sure "Root" is correct.
-// radis will stop if the path does not exist, but otherwise it will at least
-// delete empty directories in that "Root".
-//
-// Of course, you should only have flac versions of your music.
-// Sometimes they do not exist, so these albums have a "[MP3]" suffix in the
-// folder name.
-//
-// To list those offending albums, and check you have not missed any:
-//    $ radis check
-//
-// When in doubt:
-//
-//   $ radis help
-//
 package main
 
 import (
