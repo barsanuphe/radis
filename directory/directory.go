@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-
-
 )
 
 // IsEmpty checks if a directory is empty.

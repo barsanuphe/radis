@@ -22,8 +22,8 @@ var albumsStrings = []struct {
 
 func TestString(t *testing.T) {
 	for _, ta := range albumsStrings {
-		a := AlbumFolder{Root: ".", Path: ta.folder}
-		a.ExtractInfo()
+		a := Album{Root: ".", Path: ta.folder}
+		a.extractInfo()
 		if v := a.String(); v != ta.expected {
 			t.Errorf("String(%s) returned %s, expected %s!", ta.folder, v, ta.expected)
 		}
@@ -42,15 +42,15 @@ var albumsPaths = []struct {
 	{"arthi (2010) jqojdoijd (??)--+", true},
 }
 
-func TestIsAlbum(t *testing.T) {
+func TestIsValidAlbum(t *testing.T) {
 	for _, ta := range albumsPaths {
-		a := AlbumFolder{Root: ".", Path: ta.folder}
-		v := a.IsAlbum()
+		a := Album{Root: ".", Path: ta.folder}
+		v := a.IsValidAlbum()
 		if v != ta.expected {
 			t.Errorf("IsAlbum(%s) returned %v, expected %v", ta.folder, v, ta.expected)
 		}
 		// should return true the second time
-		if v && !a.IsAlbum() {
+		if v && !a.IsValidAlbum() {
 			t.Errorf("IsAlbum(%s) returned %v, expected %v", ta.folder, v, ta.expected)
 		}
 	}
@@ -58,7 +58,7 @@ func TestIsAlbum(t *testing.T) {
 
 var albumsInfos = []struct {
 	Folder          string
-	Result          AlbumFolder
+	Result          Album
 	Err             error
 	ExpectedNewPath string
 	ErrNewPath      error
@@ -66,7 +66,7 @@ var albumsInfos = []struct {
 }{
 	{
 		"music",
-		AlbumFolder{Root: ".", Path: "music"},
+		Album{Root: ".", Path: "music"},
 		errors.New("Not an album!"),
 		"",
 		errors.New("Not an album!"),
@@ -74,13 +74,13 @@ var albumsInfos = []struct {
 	},
 	{
 		"arthi東京?-4. (2000) jqojdoijd(??)--+",
-		AlbumFolder{
+		Album{
 			Root:      ".",
 			Path:      "arthi東京?-4. (2000) jqojdoijd(??)--+",
-			Artist:    "arthi東京?-4.",
-			MainAlias: "arthi東京?-4.",
-			Year:      "2000",
-			Title:     "jqojdoijd(??)--+",
+			artist:    "arthi東京?-4.",
+			mainAlias: "arthi東京?-4.",
+			year:      "2000",
+			title:     "jqojdoijd(??)--+",
 			IsMP3:     false,
 		},
 		nil,
@@ -90,13 +90,13 @@ var albumsInfos = []struct {
 	},
 	{
 		"arthi (2000) jqojdoijd [MP3]",
-		AlbumFolder{
+		Album{
 			Root:      ".",
 			Path:      "arthi (2000) jqojdoijd",
-			Artist:    "arthi",
-			MainAlias: "arthi",
-			Year:      "2000",
-			Title:     "jqojdoijd",
+			artist:    "arthi",
+			mainAlias: "arthi",
+			year:      "2000",
+			title:     "jqojdoijd",
 			IsMP3:     true,
 		},
 		nil,
@@ -119,8 +119,8 @@ var c = config.Config{
 
 func TestExtractInfo(t *testing.T) {
 	for _, ta := range albumsInfos {
-		a := AlbumFolder{Root: ".", Path: ta.Folder}
-		err := a.ExtractInfo()
+		a := Album{Root: ".", Path: ta.Folder}
+		err := a.extractInfo()
 		if err != ta.Err && a != ta.Result {
 			t.Errorf("ExtractInfo(%s) returned %s, expected %s", ta.Folder, a.String(), ta.Result.String())
 		}

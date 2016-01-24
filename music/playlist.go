@@ -3,19 +3,20 @@ package music
 import (
 	"errors"
 	"fmt"
-	"github.com/barsanuphe/radis/config"
-	"github.com/barsanuphe/radis/directory"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/barsanuphe/radis/config"
+	"github.com/barsanuphe/radis/directory"
 )
 
 // Playlist can generate .m3u playlists from a list of AlbumFolders.
 type Playlist struct {
 	Filename string
-	contents []AlbumFolder
+	contents []Album
 }
 
 // String gives a representation of an Playlist.
@@ -38,8 +39,8 @@ func (p *Playlist) Exists() (isPlaylist bool, err error) {
 
 // RemoveDuplicates in a Playlist's Contents
 func (p *Playlist) RemoveDuplicates() (err error) {
-	result := []AlbumFolder{}
-	seen := map[string]AlbumFolder{}
+	result := []Album{}
+	seen := map[string]Album{}
 	for _, val := range p.contents {
 		if _, ok := seen[val.Path]; !ok {
 			result = append(result, val)
@@ -87,7 +88,7 @@ func (p *Playlist) Load(root string) (err error) {
 
 	// add AlbumFolder to Contents
 	for _, a := range albumsPaths {
-		p.contents = append(p.contents, AlbumFolder{Root: root, Path: a})
+		p.contents = append(p.contents, Album{Root: root, Path: a})
 	}
 	return
 }
@@ -99,8 +100,9 @@ func (p *Playlist) Update(c config.Config) (err error) {
 		return
 	}
 	for i := range p.contents {
-		if err := p.contents[i].ExtractInfo(); err != nil {
-			panic(err)
+		if !p.contents[i].IsValidAlbum() {
+			err = errors.New(p.contents[i].Path + " does not seem to be an album!")
+			return
 		}
 		// find the new path, so that it can be exported by Write
 		if _, err := p.contents[i].FindNewPath(c); err != nil {

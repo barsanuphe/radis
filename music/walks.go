@@ -38,8 +38,8 @@ func SortAlbums(c config.Config) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-			af := AlbumFolder{Root: c.Paths.Root, Path: path}
-			if af.IsAlbum() {
+			af := Album{Root: c.Paths.Root, Path: path}
+			if af.IsValidAlbum() {
 				foundAlbums++
 				if af.IsMP3 {
 					mp3Albums++
@@ -100,8 +100,8 @@ func FindNonFlacAlbums(c config.Config) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-			af := AlbumFolder{Root: c.Paths.Root, Path: path}
-			if af.IsAlbum() {
+			af := Album{Root: c.Paths.Root, Path: path}
+			if af.IsValidAlbum() {
 				// scan contents for non-flac
 				isNonFlac, err := af.HasNonFlacFiles()
 				if err != nil {
