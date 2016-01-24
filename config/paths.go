@@ -3,20 +3,19 @@ package config
 import (
 	"io/ioutil"
 
+	"github.com/barsanuphe/radis/directory"
 	"gopkg.in/yaml.v2"
 )
 
-// TODO mark optional?
-
 // MainConfig contains useful paths for radis.
-type MainConfig struct {
+type Paths struct {
 	Root                 string
 	IncomingSubdir       string
 	UnsortedSubdir       string
 	MPDPlaylistDirectory string
 }
 
-func (mc *MainConfig) String() string {
+func (mc *Paths) String() string {
 	txt := "Radis configuration:\n"
 	txt += "\tRoot: " + mc.Root + "\n"
 	txt += "\tIncomingSubdir: " + mc.IncomingSubdir + "\n"
@@ -26,13 +25,20 @@ func (mc *MainConfig) String() string {
 }
 
 // Check all the paths in MainConfig exist
-func (mc *MainConfig) Check() error {
-	// TODO: check all directories exist
-	return nil
+func (mc *Paths) Check() (err error) {
+	// check the required directories exist
+	// the other directories can be created by radis
+	if _, err := directory.GetExistingPath(mc.Root); err != nil {
+		return err
+	}
+	if _, err := directory.GetExistingPath(mc.MPDPlaylistDirectory); err != nil {
+		return err
+	}
+	return
 }
 
 // Load the configuration file where the paths are defined.
-func (mc *MainConfig) Load(path string) (err error) {
+func (mc *Paths) Load(path string) (err error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -44,7 +50,7 @@ func (mc *MainConfig) Load(path string) (err error) {
 		panic(err)
 	}
 	for k, v := range m {
-		// TODO check that v exists, and that we have all keys!!!
+		// TODO check that we have all keys!!!
 		switch k {
 		case "Root":
 			mc.Root = v
@@ -59,7 +65,7 @@ func (mc *MainConfig) Load(path string) (err error) {
 	return
 }
 
-func (mc *MainConfig) Write(path string) (err error) {
+func (mc *Paths) Write(path string) (err error) {
 	// TODO do better
 	m := make(map[string]string)
 	m["Root"] = mc.Root

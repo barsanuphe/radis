@@ -1,17 +1,17 @@
-package main
+package music
 
 import "testing"
 
-var af1 = AlbumFolder{Root: ".", Path: "test (2009) doié? [MP3]"}
-var af2 = AlbumFolder{Root: ".", Path: ".._12Jïâ!! (2012) AA1AQ"}
-var p = Playlist{Filename: "hop.m3u", Contents: []AlbumFolder{af1, af2}}
+var af1 = Album{Root: ".", Path: "test (2009) doié? [MP3]"}
+var af2 = Album{Root: ".", Path: ".._12Jïâ!! (2012) AA1AQ"}
+var p = Playlist{Filename: "hop.m3u", contents: []Album{af1, af2}}
 
 var testPlaylists = []struct {
 	Playlist Playlist
 	expected string
 }{
 	{p, "hop.m3u: 2 albums"},
-	{Playlist{Filename: "éé?.m3u", Contents: []AlbumFolder{af1}}, "éé?.m3u: 1 albums"},
+	{Playlist{Filename: "éé?.m3u", contents: []Album{af1}}, "éé?.m3u: 1 albums"},
 }
 
 func TestPlaylistString(t *testing.T) {
