@@ -18,17 +18,18 @@ func timeTrack(start time.Time, name string) {
 }
 
 // SortAlbums scans the music collection root and reorders albums according to the configuration files.
-func SortAlbums(c config.Config) (err error) {
+func SortAlbums(c config.Config, doNothing bool) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
 	movedAlbums := 0
 	uncategorized := 0
 	foundAlbums := 0
+	newAlbums := 0
 	mp3Albums := 0
 
 	dailyPlaylist, monthlyPlaylist := loadCurrentPlaylists(c)
 
-	fmt.Println("Scanning for albums in " + c.Paths.Root + ".")
+	fmt.Printf("Scanning for albums in %s...\n\n", c.Paths.Root)
 	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -50,7 +51,7 @@ func SortAlbums(c config.Config) (err error) {
 				if !hasGenre {
 					uncategorized++
 				}
-				hasMoved, err := a.MoveToNewPath()
+				hasMoved, err := a.MoveToNewPath(doNothing)
 				if err != nil {
 					panic(err)
 				}
@@ -60,8 +61,11 @@ func SortAlbums(c config.Config) (err error) {
 				if a.IsNew(c) {
 					// add to playlist automatically
 					fmt.Println("  ++ " + a.String() + " was in INCOMING, adding to playlist.")
-					dailyPlaylist.contents = append(dailyPlaylist.contents, a)
-					monthlyPlaylist.contents = append(monthlyPlaylist.contents, a)
+					newAlbums++
+					if !doNothing {
+						dailyPlaylist.contents = append(dailyPlaylist.contents, a)
+						monthlyPlaylist.contents = append(monthlyPlaylist.contents, a)
+					}
 				}
 			}
 		}
@@ -70,9 +74,14 @@ func SortAlbums(c config.Config) (err error) {
 	if err != nil {
 		fmt.Printf("Error!")
 	}
-	fmt.Printf("Found %d albums (%d MP3 albums), Moved %d.\n", foundAlbums, mp3Albums, movedAlbums)
+	fmt.Printf("\n### Found %d albums including %d MP3 albums and %d new albums\n", foundAlbums, mp3Albums, newAlbums)
+	if doNothing {
+		fmt.Printf("### %d albums would be moved by a collection sync.\n", movedAlbums)
+	} else {
+		fmt.Printf("### %d have been moved.\n", movedAlbums)
+	}
 	if uncategorized != 0 {
-		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
+		fmt.Printf("\n!!!\n!!! %d albums are still UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
 	}
 
 	if err := writeCurrentPlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
@@ -85,7 +94,7 @@ func SortAlbums(c config.Config) (err error) {
 func FindNonFlacAlbums(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	fmt.Println("Scanning for non-Flac albums in " + c.Paths.Root + ".")
+	fmt.Printf("Scanning for non-Flac albums in %s.\n", c.Paths.Root)
 	unFlagged := 0
 	nonFlacAlbums := 0
 	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
@@ -120,7 +129,7 @@ func FindNonFlacAlbums(c config.Config) (err error) {
 	if err != nil {
 		fmt.Printf("Error!")
 	}
-	fmt.Printf("Found %d non-Flac albums, including %d incorrectly flagged.\n", nonFlacAlbums, unFlagged)
+	fmt.Printf("\n### Found %d non-Flac albums, including %d incorrectly flagged.\n", nonFlacAlbums, unFlagged)
 	if unFlagged != 0 {
 		fmt.Printf("\n!!!\n!!! %d album(s) remain UNCATEGORIZED !!!\n!!!\n\n", unFlagged)
 	}
@@ -131,7 +140,7 @@ func FindNonFlacAlbums(c config.Config) (err error) {
 func DeleteEmptyFolders(c config.Config) (err error) {
 	defer timeTrack(time.Now(), "Scanning files")
 
-	fmt.Println("Scanning for empty directories.")
+	fmt.Printf("Scanning for empty directories.\n\n")
 	deletedDirectories := 0
 	deletedDirectoriesThisTime := 0
 	atLeastOnce := false
@@ -166,6 +175,6 @@ func DeleteEmptyFolders(c config.Config) (err error) {
 		}
 	}
 
-	fmt.Printf("Removed %d albums.\n", deletedDirectories)
+	fmt.Printf("\n### Removed %d albums.\n", deletedDirectories)
 	return
 }

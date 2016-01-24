@@ -32,7 +32,7 @@ create the necessary configuration files.
 
 Usage
 
-When in doubt, try
+When in doubt, try:
 
 	radis help
 
@@ -51,14 +51,41 @@ which should display something  like:
 	   0.0.1
 
 	COMMANDS:
-	   config, c                    options for configuration
-	   playlist, p                  options for playlist
-	   sync, s                      sync folder according to configuration
-	   check, find_awfulness        check every album is a flac version, list the heretics.
-	   help, h                      Shows a list of commands or help for one command
+	   config, c            options for configuration
+	   playlist, p          options for playlist
+	   collection, p        options for music collection
+	   help, h              Shows a list of commands or help for one command
 
 	GLOBAL OPTIONS:
 	   --help, -h           show help
 	   --version, -v        print the version
+
+or:
+
+	radis collection help
+
+which would give:
+
+			R A D I S
+			---------
+
+	NAME:
+	   R A D I S collection - options for music collection
+
+	USAGE:
+	   R A D I S collection [global options] command [command options] [arguments...]
+
+	VERSION:
+	   0.0.1
+
+	COMMANDS:
+	   sync, s              sync folder according to configuration
+	   check, s             check against configuration
+	   fsck, findMP3        check every album is a flac version, list the heretics.
+	   help, h              Shows a list of commands or help for one command
+
+	GLOBAL OPTIONS:
+	   --help, -h   show help
+
 */
 package main

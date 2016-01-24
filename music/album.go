@@ -110,7 +110,7 @@ func (a *Album) FindNewPath(c config.Config) (hasGenre bool, err error) {
 }
 
 // MoveToNewPath moves an album directory to its new home in another genre.
-func (a *Album) MoveToNewPath() (hasMoved bool, err error) {
+func (a *Album) MoveToNewPath(doNothing bool) (hasMoved bool, err error) {
 	hasMoved = false
 	if a.NewPath == "" {
 		return false, errors.New("FindNewPath first.")
@@ -122,17 +122,22 @@ func (a *Album) MoveToNewPath() (hasMoved bool, err error) {
 		destRelative, _ := filepath.Rel(a.Root, a.NewPath)
 		fmt.Println("- "+originalRelative, " -> ", destRelative)
 
-		newPathParent := filepath.Dir(a.NewPath)
-		if _, err = os.Stat(newPathParent); os.IsNotExist(err) {
-			// newPathParent does not exist, creating
-			err = os.MkdirAll(newPathParent, 0777)
-			if err != nil {
-				panic(err)
+		if !doNothing {
+			newPathParent := filepath.Dir(a.NewPath)
+			if _, err = os.Stat(newPathParent); os.IsNotExist(err) {
+				// newPathParent does not exist, creating
+				err = os.MkdirAll(newPathParent, 0777)
+				if err != nil {
+					panic(err)
+				}
 			}
-		}
-		// move
-		err = os.Rename(a.Path, a.NewPath)
-		if err == nil {
+			// move
+			err = os.Rename(a.Path, a.NewPath)
+			if err == nil {
+				hasMoved = true
+			}
+		} else {
+			// would have moved, but must do nothing
 			hasMoved = true
 		}
 	}

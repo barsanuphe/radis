@@ -85,7 +85,7 @@ This loads, sorts, and save the configuration files, for better readability:
 
 This reorganizes your music collection in the `Root` indicated in `radis.yaml`:
 
-    $ radis sync
+    $ radis collection sync
 
 Make sure `Root` is correct.
 **radis** will stop if the path does not exist, but otherwise it will at least
@@ -101,13 +101,16 @@ Also, **radis** only works if you have this setup:
 What if you have something different?
 Then you should not use **radis**.
 
+Before doing a `sync`, you can also try `radis collection check`, which will
+just show what a `sync` would do.
+
 Of course, you should only have flac versions of your music.
 Sometimes they do not exist, so these albums have a `[MP3]` suffix in the folder
 name.
 
 To list those offending albums, and check you have not missed any:
 
-    $ radis check
+    $ radis collection fsck
 
 To list known playlists:
 

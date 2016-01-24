@@ -93,29 +93,47 @@ func main() {
 			},
 		},
 		{
-			Name:    "sync",
-			Aliases: []string{"s"},
-			Usage:   "sync folder according to configuration",
-			Action: func(c *cli.Context) {
-				// sort albums
-				if err := music.SortAlbums(rc); err != nil {
-					panic(err)
-				}
-				// scan again to remove empty directories
-				if err := music.DeleteEmptyFolders(rc); err != nil {
-					panic(err)
-				}
-			},
-		},
-		{
-			Name:    "check",
-			Aliases: []string{"find_awfulness"},
-			Usage:   "check every album is a flac version, list the heretics.",
-			Action: func(c *cli.Context) {
-				// list non Flac albums
-				if err := music.FindNonFlacAlbums(rc); err != nil {
-					panic(err)
-				}
+			Name:    "collection",
+			Aliases: []string{"p"},
+			Usage:   "options for music collection",
+			Subcommands: []cli.Command{
+				{
+					Name:    "sync",
+					Aliases: []string{"s"},
+					Usage:   "sync folder according to configuration",
+					Action: func(c *cli.Context) {
+						// sort albums
+						if err := music.SortAlbums(rc, false); err != nil {
+							panic(err)
+						}
+						// scan again to remove empty directories
+						if err := music.DeleteEmptyFolders(rc); err != nil {
+							panic(err)
+						}
+					},
+				},
+				{
+					Name:    "check",
+					Aliases: []string{"s"},
+					Usage:   "check against configuration",
+					Action: func(c *cli.Context) {
+						// sort albums
+						if err := music.SortAlbums(rc, true); err != nil {
+							panic(err)
+						}
+					},
+				},
+				{
+					Name:    "fsck",
+					Aliases: []string{"findMP3"},
+					Usage:   "check every album is a flac version, list the heretics.",
+					Action: func(c *cli.Context) {
+						// list non Flac albums
+						if err := music.FindNonFlacAlbums(rc); err != nil {
+							panic(err)
+						}
+					},
+				},
 			},
 		},
 	}
