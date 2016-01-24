@@ -1,4 +1,5 @@
-package radis
+// Package music deals with album folders and m3u playlists.
+package music
 
 import (
 	"errors"
@@ -6,8 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 
 	"github.com/barsanuphe/radis/config"
+	"github.com/barsanuphe/radis/directory"
 )
 
 var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
@@ -121,4 +124,46 @@ func (a *AlbumFolder) MoveToNewPath() (hasMoved bool, err error) {
 		}
 	}
 	return
+}
+
+// GetMusicFiles returns flac or mp3 files of the album.
+func (a *AlbumFolder) GetMusicFiles() (contents []string, err error) {
+	fileList, err := directory.GetFiles(a.NewPath)
+	if err != nil {
+		return []string{}, err
+	}
+	// check for music files
+	for _, file := range fileList {
+		switch filepath.Ext(file) {
+		case ".flac", ".mp3":
+			// accepted extensions
+			contents = append(contents, filepath.Join(a.NewPath, file))
+		}
+	}
+	sort.Strings(contents)
+	return
+}
+
+// HasNonFlacFiles returns true if an album contains files other than flac songs and cover pictures.
+func (a *AlbumFolder) HasNonFlacFiles() (bool, error) {
+	fileList, err := directory.GetFiles(a.Path)
+	if err != nil {
+		return false, err
+	}
+	// check for suspicious files
+	hasNonFlac := false
+	for _, file := range fileList {
+		switch filepath.Ext(file) {
+		case ".flac", ".jpg", ".jpeg", ".png":
+			// accepted extensions
+		case ".mp3", ".wma", ".m4a":
+			hasNonFlac = true
+			break
+		default:
+			fmt.Println("Found suspicious file ", file, " in ", a.Path)
+			hasNonFlac = true
+			break
+		}
+	}
+	return hasNonFlac, err
 }

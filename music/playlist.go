@@ -1,10 +1,10 @@
-package radis
+package music
 
 import (
 	"errors"
 	"fmt"
 	"github.com/barsanuphe/radis/config"
-	"github.com/barsanuphe/radis/helpers"
+	"github.com/barsanuphe/radis/directory"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,7 +26,7 @@ func (p *Playlist) String() (playlist string) {
 
 // Exists finds out if a Playlist is valid or not
 func (p *Playlist) Exists() (isPlaylist bool, err error) {
-	path, err := helpers.GetExistingPath(p.Filename)
+	path, err := directory.GetExistingPath(p.Filename)
 	if err != nil {
 		return
 	}
@@ -51,6 +51,19 @@ func (p *Playlist) RemoveDuplicates() (err error) {
 	return
 }
 
+// removeDuplicatePaths takes a slice of paths, return one without duplicates
+func removeDuplicatePaths(a []string) []string {
+	result := []string{}
+	seen := map[string]string{}
+	for _, val := range a {
+		if _, ok := seen[val]; !ok {
+			result = append(result, val)
+			seen[val] = val
+		}
+	}
+	return result
+}
+
 // Load an existing playlist
 func (p *Playlist) Load(root string) (err error) {
 	// open file and get strings
@@ -70,7 +83,7 @@ func (p *Playlist) Load(root string) (err error) {
 		}
 	}
 	// remove duplicates
-	albumsPaths = helpers.RemoveDuplicatePaths(albumsPaths)
+	albumsPaths = removeDuplicatePaths(albumsPaths)
 
 	// add AlbumFolder to Contents
 	for _, a := range albumsPaths {
@@ -112,7 +125,7 @@ func (p *Playlist) Write() (err error) {
 	// append contents
 	contents := []string{}
 	for _, af := range p.contents {
-		files, err := helpers.GetMusicFiles(af.NewPath)
+		files, err := af.GetMusicFiles()
 		if os.IsNotExist(err) {
 			return errors.New("Could not find path " + af.NewPath + "; have you synced lately?")
 		} else if err != nil {

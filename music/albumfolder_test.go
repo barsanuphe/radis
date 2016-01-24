@@ -1,8 +1,11 @@
-package radis
+package music
 
 import (
 	"errors"
 	"testing"
+
+	"fmt"
+	"os"
 
 	"github.com/barsanuphe/radis/config"
 )
@@ -22,7 +25,7 @@ func TestString(t *testing.T) {
 		a := AlbumFolder{Root: ".", Path: ta.folder}
 		a.ExtractInfo()
 		if v := a.String(); v != ta.expected {
-			t.Errorf("String(%s) returned %s, expected %s", ta.folder, v, ta.expected)
+			t.Errorf("String(%s) returned %s, expected %s!", ta.folder, v, ta.expected)
 		}
 	}
 }
@@ -62,8 +65,8 @@ var albumsInfos = []struct {
 	HasGenre        bool
 }{
 	{
-		"hop",
-		AlbumFolder{Root: ".", Path: "hop"},
+		"music",
+		AlbumFolder{Root: ".", Path: "music"},
 		errors.New("Not an album!"),
 		"",
 		errors.New("Not an album!"),
@@ -135,6 +138,22 @@ func TestFindNewPath(t *testing.T) {
 		}
 		if ta.Result.NewPath != ta.ExpectedNewPath {
 			t.Errorf("TestFindNewPath(%s) returned NewPath %s, expected %s", ta.Folder, ta.Result.NewPath, ta.ExpectedNewPath)
+		}
+	}
+}
+
+func TestHasNonFlacFiles(t *testing.T) {
+	// TODO create fake directory with flac files
+	for _, ta := range albumsInfos {
+		_, err := ta.Result.FindNewPath(c)
+		// only testing on correct album folders
+		if err == nil {
+			hasNonFlac, err := ta.Result.HasNonFlacFiles()
+			if os.IsNotExist(err) {
+				fmt.Println(ta.Result.NewPath + " does not exist...")
+			} else if !hasNonFlac || err != nil {
+				t.Errorf("Directory " + ta.Result.NewPath + " contains forbidden files!")
+			}
 		}
 	}
 }

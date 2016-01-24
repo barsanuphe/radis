@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/barsanuphe/radis/config"
-	"github.com/barsanuphe/radis/helpers"
-	"github.com/barsanuphe/radis/radis"
+	"github.com/barsanuphe/radis/directory"
+	"github.com/barsanuphe/radis/music"
 	"github.com/codegangsta/cli"
 )
 
@@ -69,7 +69,7 @@ func main() {
 					Usage:   "list playlists",
 					Action: func(c *cli.Context) {
 						fmt.Println("Playlists: ")
-						files, err := helpers.GetPlaylistFiles(rc.Paths.MPDPlaylistDirectory)
+						files, err := directory.GetPlaylists(rc.Paths.MPDPlaylistDirectory)
 						if err != nil {
 							fmt.Println(err.Error())
 						}
@@ -84,7 +84,7 @@ func main() {
 					Usage:   "update playlist according to configuration.",
 					Action: func(c *cli.Context) {
 						fmt.Println("Updating " + c.Args().First())
-						p := radis.Playlist{Filename: filepath.Join(rc.Paths.MPDPlaylistDirectory, c.Args().First())}
+						p := music.Playlist{Filename: filepath.Join(rc.Paths.MPDPlaylistDirectory, c.Args().First())}
 						if err := p.UpdateAndSave(rc); err != nil {
 							fmt.Println(err.Error())
 						}
@@ -98,11 +98,11 @@ func main() {
 			Usage:   "sync folder according to configuration",
 			Action: func(c *cli.Context) {
 				// sort albums
-				if err := radis.SortAlbums(rc); err != nil {
+				if err := music.SortAlbums(rc); err != nil {
 					panic(err)
 				}
 				// scan again to remove empty directories
-				if err := radis.DeleteEmptyFolders(rc); err != nil {
+				if err := music.DeleteEmptyFolders(rc); err != nil {
 					panic(err)
 				}
 			},
@@ -113,7 +113,7 @@ func main() {
 			Usage:   "check every album is a flac version, list the heretics.",
 			Action: func(c *cli.Context) {
 				// list non Flac albums
-				if err := radis.FindNonFlacAlbums(rc); err != nil {
+				if err := music.FindNonFlacAlbums(rc); err != nil {
 					panic(err)
 				}
 			},

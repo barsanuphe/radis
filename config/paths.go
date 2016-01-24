@@ -3,7 +3,7 @@ package config
 import (
 	"io/ioutil"
 
-	"github.com/barsanuphe/radis/helpers"
+	"github.com/barsanuphe/radis/directory"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,10 +28,10 @@ func (mc *Paths) String() string {
 func (mc *Paths) Check() (err error) {
 	// check the required directories exist
 	// the other directories can be created by radis
-	if _, err := helpers.GetExistingPath(mc.Root); err != nil {
+	if _, err := directory.GetExistingPath(mc.Root); err != nil {
 		return err
 	}
-	if _, err := helpers.GetExistingPath(mc.MPDPlaylistDirectory); err != nil {
+	if _, err := directory.GetExistingPath(mc.MPDPlaylistDirectory); err != nil {
 		return err
 	}
 	return

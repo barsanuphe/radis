@@ -1,4 +1,4 @@
-package radis
+package music
 
 import "testing"
 

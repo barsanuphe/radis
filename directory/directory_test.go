@@ -1,4 +1,4 @@
-package helpers
+package directory
 
 import (
 	"errors"
@@ -29,7 +29,7 @@ var testPaths = []struct {
 	{"/tmp", "/tmp", nil},
 	{"/ddsdcisj", "/ddsdcisj", errDirectoryDoesNotExist},
 	{"/ddsdcisj", "/ddsdcisj", errDirectoryDoesNotExist},
-	{"relative", filepath.Join(goPath, "src/github.com/barsanuphe/radis/helpers/relative"), errors.New("Path relative does not exist!!!")},
+	{"relative", filepath.Join(goPath, "src/github.com/barsanuphe/radis/directory/relative"), errors.New("Path relative does not exist!!!")},
 }
 
 func TestGetExistingPath(t *testing.T) {
@@ -40,17 +40,5 @@ func TestGetExistingPath(t *testing.T) {
 		} else if err != nil && tp.err != nil && err.Error() != tp.err.Error() {
 			t.Errorf("GetExistingPath(%s) returned err %s, expected %s", tp.path, err.Error(), tp.err.Error())
 		}
-	}
-}
-
-func TestHasNonFlacFiles(t *testing.T) {
-	// TODO create fake directory with flac files
-	current, err := os.Getwd()
-	if err != nil {
-		t.Errorf("Could not get current directory!")
-	}
-	hasNonFlac, err := HasNonFlacFiles(current)
-	if !hasNonFlac || err != nil {
-		t.Errorf("Current directory contains forbidden files!")
 	}
 }

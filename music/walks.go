@@ -1,4 +1,4 @@
-package radis
+package music
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/barsanuphe/radis/config"
-	"github.com/barsanuphe/radis/helpers"
+	"github.com/barsanuphe/radis/directory"
 )
 
 // TimeTrack can be used to evaluate the time spent in a function.
@@ -103,7 +103,7 @@ func FindNonFlacAlbums(c config.Config) (err error) {
 			af := AlbumFolder{Root: c.Paths.Root, Path: path}
 			if af.IsAlbum() {
 				// scan contents for non-flac
-				isNonFlac, err := helpers.HasNonFlacFiles(path)
+				isNonFlac, err := af.HasNonFlacFiles()
 				if err != nil {
 					panic(err)
 				}
@@ -151,7 +151,7 @@ func DeleteEmptyFolders(c config.Config) (err error) {
 				return
 			}
 			if fileInfo.IsDir() {
-				isEmpty, err := helpers.IsEmpty(path)
+				isEmpty, err := directory.IsEmpty(path)
 				if err != nil {
 					panic(err)
 				}
