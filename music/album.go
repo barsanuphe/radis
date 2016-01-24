@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/barsanuphe/radis/config"
 	"github.com/barsanuphe/radis/directory"
@@ -51,6 +52,11 @@ func (a *Album) IsValidAlbum() bool {
 	return true
 }
 
+// IsNew checks if the album was found in the INCOMING directory.
+func (a *Album) IsNew(c config.Config) bool {
+	return strings.Contains(a.Path, filepath.Join(c.Paths.Root, c.Paths.IncomingSubdir))
+}
+
 // extractInfo parses an AlbumFolder's basepath to extract information.
 func (a *Album) extractInfo() (err error) {
 	matches := albumPattern.FindStringSubmatch(filepath.Base(a.Path))
@@ -84,8 +90,14 @@ func (a *Album) FindNewPath(c config.Config) (hasGenre bool, err error) {
 	hasGenre = false
 	directoryName := filepath.Base(a.Path)
 	for _, genre := range c.Genres {
+		var found bool
+		if a.mainAlias == "Various Artists" {
+			found = genre.HasCompilation(a.title)
+		} else {
+			found = genre.HasArtist(a.mainAlias)
+		}
 		// if artist is known, it belongs to genre.Name
-		if genre.HasArtist(a.mainAlias) || genre.HasCompilation(a.title) {
+		if found {
 			a.NewPath = filepath.Join(a.Root, genre.Name, a.mainAlias, directoryName)
 			hasGenre = true
 			break

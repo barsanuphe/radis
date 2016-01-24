@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/barsanuphe/radis/config"
@@ -38,34 +37,31 @@ func SortAlbums(c config.Config) (err error) {
 		}
 
 		if fileInfo.IsDir() {
-			af := Album{Root: c.Paths.Root, Path: path}
-			if af.IsValidAlbum() {
+			a := Album{Root: c.Paths.Root, Path: path}
+			if a.IsValidAlbum() {
 				foundAlbums++
-				if af.IsMP3 {
+				if a.IsMP3 {
 					mp3Albums++
 				}
-				hasGenre, err := af.FindNewPath(c)
+				hasGenre, err := a.FindNewPath(c)
 				if err != nil {
 					panic(err)
 				}
 				if !hasGenre {
 					uncategorized++
 				}
-				hasMoved, err := af.MoveToNewPath()
+				hasMoved, err := a.MoveToNewPath()
 				if err != nil {
 					panic(err)
 				}
 				if hasMoved {
 					movedAlbums++
 				}
-
-				// find out if we should append playlists
-				isInsideIncoming := strings.Contains(path, filepath.Join(c.Paths.Root, c.Paths.IncomingSubdir))
-				if isInsideIncoming {
-					// album is inside INCOMING dir, add to playlist automatically
-					fmt.Println("  ++ " + af.String() + " was in INCOMING, adding to playlist.")
-					dailyPlaylist.contents = append(dailyPlaylist.contents, af)
-					monthlyPlaylist.contents = append(monthlyPlaylist.contents, af)
+				if a.IsNew(c) {
+					// add to playlist automatically
+					fmt.Println("  ++ " + a.String() + " was in INCOMING, adding to playlist.")
+					dailyPlaylist.contents = append(dailyPlaylist.contents, a)
+					monthlyPlaylist.contents = append(monthlyPlaylist.contents, a)
 				}
 			}
 		}

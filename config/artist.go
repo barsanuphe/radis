@@ -18,7 +18,7 @@ func (g *Artist) String() string {
 
 // HasAlias can check if an Artist has a given alias.
 func (g *Artist) HasAlias(alias string) bool {
-	sort.Strings(g.Aliases)
+	// already sorted at Load
 	i := sort.SearchStrings(g.Aliases, alias)
 	if i < len(g.Aliases) && g.Aliases[i] == alias {
 		// fmt.Println("++ Found alias ", alias, "in genre ", g.MainAlias)

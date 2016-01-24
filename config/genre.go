@@ -18,7 +18,7 @@ func (g *Genre) String() string {
 
 // HasArtist checks if the Genre contains a given artist.
 func (g *Genre) HasArtist(artist string) bool {
-	sort.Strings(g.Artists)
+	// already sorted at Load
 	i := sort.SearchStrings(g.Artists, artist)
 	if i < len(g.Artists) && g.Artists[i] == artist {
 		// fmt.Println("++ Found artist ", artist, "in genre ", g.Name)
@@ -30,7 +30,7 @@ func (g *Genre) HasArtist(artist string) bool {
 // HasCompilation checks if the Genre contains a compilation with a specific title.
 func (g *Genre) HasCompilation(title string) bool {
 	fullTitle := "Various Artists | " + title
-	sort.Strings(g.Artists)
+	// already sorted at Load
 	i := sort.SearchStrings(g.Artists, fullTitle)
 	if i < len(g.Artists) && g.Artists[i] == fullTitle {
 		// fmt.Println("++ Found compilation ", fullTitle, "in genre ", g.Name)
