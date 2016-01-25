@@ -24,7 +24,6 @@ func (c *Config) Check() error {
 	return c.Paths.Check()
 }
 
-// TODO GetConfigPath, Load, Write de radis.go
 const (
 	radis                  = "radis"
 	radisGenresConfigFile  = radis + "_genres.yaml"

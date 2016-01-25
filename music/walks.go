@@ -76,9 +76,9 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 	}
 	fmt.Printf("\n### Found %d albums including %d MP3 albums and %d new albums\n", foundAlbums, mp3Albums, newAlbums)
 	if doNothing {
-		fmt.Printf("### %d albums would be moved by a collection sync.\n", movedAlbums)
+		fmt.Printf("### Sync would move %d albums.\n", movedAlbums)
 	} else {
-		fmt.Printf("### %d have been moved.\n", movedAlbums)
+		fmt.Printf("### Moved %d albums.\n", movedAlbums)
 	}
 	if uncategorized != 0 {
 		fmt.Printf("\n!!!\n!!! %d albums are still UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
