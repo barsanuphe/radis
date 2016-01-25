@@ -59,7 +59,7 @@ func GetFiles(path string) (contents []string, err error) {
 	return fileList, err
 }
 
-// GetPlaylistFiles returns a list of .m3u files.
+// GetPlaylists returns a list of .m3u files.
 func GetPlaylists(playlistRoot string) (contents []string, err error) {
 	fileList, err := GetFiles(playlistRoot)
 	if err != nil {

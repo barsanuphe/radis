@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// MainConfig contains useful paths for radis.
+// Paths contains useful paths for radis.
 type Paths struct {
 	Root                 string
 	IncomingSubdir       string

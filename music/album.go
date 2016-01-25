@@ -12,7 +12,6 @@ import (
 
 	"github.com/barsanuphe/radis/config"
 	"github.com/barsanuphe/radis/directory"
-
 )
 
 var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
