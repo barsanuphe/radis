@@ -71,12 +71,10 @@ func (c *Config) Load() (err error) {
 	if err != nil {
 		return
 	}
-
 	// load config files
 	if err = c.Paths.Load(mainConfigFile); err != nil {
 		return
 	}
-	// load config files
 	if err = c.Aliases.Load(aliasesConfigFile); err != nil {
 		return
 	}
