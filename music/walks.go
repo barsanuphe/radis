@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/barsanuphe/radis/config"
 	"github.com/barsanuphe/radis/directory"
 	"github.com/ttacon/chalk"
-	"strconv"
 )
 
 // TimeTrack can be used to evaluate the time spent in a function.
@@ -58,16 +58,18 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 					panic(err)
 				}
 				if hasMoved {
+					originalRelative, _ := filepath.Rel(a.Root, a.Path)
+					destRelative, _ := filepath.Rel(a.Root, a.NewPath)
+					fmt.Println(chalk.Yellow.Color("+ " + a.String()))
+					fmt.Println("\t    " + originalRelative + "\n\t -> " + destRelative)
 					movedAlbums++
 				}
 				if a.IsNew(c) {
 					// add to playlist automatically,
-					fmt.Printf("%s+ %s was in INCOMING, adding to playlist.\n%s", chalk.Green, a.String(), chalk.Reset)
+					fmt.Printf("%s\t    Adding to playlist.\n%s", chalk.Green, chalk.Reset)
 					newAlbums++
-					if !doNothing {
-						dailyPlaylist.contents = append(dailyPlaylist.contents, a)
-						monthlyPlaylist.contents = append(monthlyPlaylist.contents, a)
-					}
+					dailyPlaylist.contents = append(dailyPlaylist.contents, a)
+					monthlyPlaylist.contents = append(monthlyPlaylist.contents, a)
 				}
 			}
 		}
@@ -86,9 +88,10 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 	if uncategorized != 0 {
 		fmt.Println(chalk.Bold.TextStyle(chalk.Red.Color("\n!!!\n!!! " + strconv.Itoa(uncategorized) + " albums are still UNCATEGORIZED !!!\n!!!\n\n")))
 	}
-
-	if err := writeCurrentPlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
-		panic(err)
+	if !doNothing {
+		if err := writeCurrentPlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
+			panic(err)
+		}
 	}
 	return
 }

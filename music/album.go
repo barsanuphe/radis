@@ -12,6 +12,7 @@ import (
 
 	"github.com/barsanuphe/radis/config"
 	"github.com/barsanuphe/radis/directory"
+
 )
 
 var albumPattern = regexp.MustCompile(`^([\pL\pP\pS\pN\d\pZ]+) \(([0-9]{4})\) ([\pL\pP\pS\pN\d\pZ]+?)(\[MP3\])?$`)
@@ -118,10 +119,6 @@ func (a *Album) MoveToNewPath(doNothing bool) (hasMoved bool, err error) {
 	// comparer avec l'ancien
 	if a.NewPath != a.Path {
 		// if different, move folder
-		originalRelative, _ := filepath.Rel(a.Root, a.Path)
-		destRelative, _ := filepath.Rel(a.Root, a.NewPath)
-		fmt.Println("+ ", originalRelative, " -> ", destRelative)
-
 		if !doNothing {
 			newPathParent := filepath.Dir(a.NewPath)
 			if _, err = os.Stat(newPathParent); os.IsNotExist(err) {
