@@ -9,10 +9,11 @@ import (
 	"github.com/barsanuphe/radis/directory"
 	"github.com/barsanuphe/radis/music"
 	"github.com/codegangsta/cli"
+	"github.com/ttacon/chalk"
 )
 
 func main() {
-	fmt.Printf("\n\tR A D I S\n\t---------\n\n")
+	fmt.Println(chalk.Bold.TextStyle("\n# # # R A D I S # # #\n"))
 
 	// load config
 	rc := config.Config{}

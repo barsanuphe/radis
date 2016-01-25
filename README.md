@@ -67,7 +67,7 @@ It is written in Go, so everything fits into a nice executable.
 
 If you have a working Go environnment, go get it:
 
-    $ go get github.com/barsanuphe/radis
+    $ go get -u github.com/barsanuphe/radis
 
 The configuration files *radis_aliases.yaml* and *radis_genres.yaml* are
 expected to be in `$XDG_CONFIG_HOME/radis/`.

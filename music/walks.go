@@ -8,6 +8,8 @@ import (
 
 	"github.com/barsanuphe/radis/config"
 	"github.com/barsanuphe/radis/directory"
+	"github.com/ttacon/chalk"
+	"strconv"
 )
 
 // TimeTrack can be used to evaluate the time spent in a function.
@@ -29,7 +31,7 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 
 	dailyPlaylist, monthlyPlaylist := loadCurrentPlaylists(c)
 
-	fmt.Printf("Scanning for albums in %s...\n\n", c.Paths.Root)
+	fmt.Printf("%sScanning for albums in %s...\n\n%s", chalk.Blue, c.Paths.Root, chalk.Reset)
 	err = filepath.Walk(c.Paths.Root, func(path string, fileInfo os.FileInfo, walkError error) (err error) {
 		// when an album has just been moved, Walk goes through it a second
 		// time with an "file does not exist" error
@@ -59,8 +61,8 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 					movedAlbums++
 				}
 				if a.IsNew(c) {
-					// add to playlist automatically
-					fmt.Println("  ++ " + a.String() + " was in INCOMING, adding to playlist.")
+					// add to playlist automatically,
+					fmt.Printf("%s+ %s was in INCOMING, adding to playlist.\n%s", chalk.Green, a.String(), chalk.Reset)
 					newAlbums++
 					if !doNothing {
 						dailyPlaylist.contents = append(dailyPlaylist.contents, a)
@@ -74,6 +76,7 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 	if err != nil {
 		fmt.Printf("Error!")
 	}
+	fmt.Println(chalk.Blue)
 	fmt.Printf("\n### Found %d albums including %d MP3 albums and %d new albums\n", foundAlbums, mp3Albums, newAlbums)
 	if doNothing {
 		fmt.Printf("### Sync would move %d albums.\n", movedAlbums)
@@ -81,7 +84,7 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 		fmt.Printf("### Moved %d albums.\n", movedAlbums)
 	}
 	if uncategorized != 0 {
-		fmt.Printf("\n!!!\n!!! %d albums are still UNCATEGORIZED !!!\n!!!\n\n", uncategorized)
+		fmt.Println(chalk.Bold.TextStyle(chalk.Red.Color("\n!!!\n!!! " + strconv.Itoa(uncategorized) + " albums are still UNCATEGORIZED !!!\n!!!\n\n")))
 	}
 
 	if err := writeCurrentPlaylists(dailyPlaylist, monthlyPlaylist); err != nil {
