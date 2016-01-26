@@ -53,13 +53,16 @@ func SortAlbums(c config.Config, doNothing bool) (err error) {
 				if !hasGenre {
 					uncategorized++
 				}
+
+				originalRelative, _ := filepath.Rel(a.Root, a.Path)
+				destRelative, _ := filepath.Rel(a.Root, a.NewPath)
+
 				hasMoved, err := a.MoveToNewPath(doNothing)
 				if err != nil {
-					panic(err)
+					fmt.Println(chalk.Bold.TextStyle(chalk.Red.Color("!!! ERROR MOVING " + a.String())))
+					fmt.Println(chalk.Bold.TextStyle(chalk.Red.Color("!!!\t    " + originalRelative + "\n!!!\t -> " + destRelative)))
 				}
 				if hasMoved {
-					originalRelative, _ := filepath.Rel(a.Root, a.Path)
-					destRelative, _ := filepath.Rel(a.Root, a.NewPath)
 					fmt.Println(chalk.Yellow.Color("+ " + a.String()))
 					fmt.Println("\t    " + originalRelative + "\n\t -> " + destRelative)
 					movedAlbums++

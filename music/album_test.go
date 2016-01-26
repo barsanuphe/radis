@@ -101,7 +101,6 @@ func createTestFiles(c config.Config) {
 		panic(err)
 	}
 
-	// TODO what happens if we want to move an album to an already existing path???
 	// create folders
 	a0 := filepath.Join(c.Paths.Root, "arthi (2000) jqojdoijd")
 	a1 := filepath.Join(c.Paths.Root, "arthi東京?-4. (2000) jqojdoijd(??)--+")
